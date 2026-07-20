@@ -1,24 +1,117 @@
 @import "tailwindcss";
 
-:root {
-  --background: #0A0A0A;
-  --foreground: #FAFAFA;
+/* ==============================
+   TEMA DEĞİŞKENLERİ
+   ============================== */
+
+/* Dark Tema (Varsayılan) */
+:root,
+[data-theme="dark"] {
+  --bg:              #0A0A0A;
+  --bg-surface:      rgba(255, 255, 255, 0.02);
+  --bg-surface-hover: rgba(255, 255, 255, 0.04);
+  --bg-elevated:     #0A0A0A;
+  --bg-header:       rgba(10, 10, 10, 0.6);
+
+  --border:          rgba(255, 255, 255, 0.05);
+  --border-hover:    rgba(255, 255, 255, 0.10);
+  --border-strong:   rgba(255, 255, 255, 0.10);
+
+  --text-primary:    rgba(255, 255, 255, 0.90);
+  --text-secondary:  rgba(255, 255, 255, 0.60);
+  --text-tertiary:   rgba(255, 255, 255, 0.40);
+  --text-inverted:   #000000;
+
+  --input-bg:        rgba(255, 255, 255, 0.05);
+  --input-border:    rgba(255, 255, 255, 0.10);
+  --input-focus:     rgba(255, 255, 255, 0.20);
+
+  --badge-bg:        rgba(255, 255, 255, 0.10);
+  --badge-text:      rgba(255, 255, 255, 0.60);
+
+  --btn-primary-bg:  #FFFFFF;
+  --btn-primary-text: #000000;
+  --btn-primary-hover: #E5E5E5;
+
+  --logo-bg:         #FFFFFF;
+  --logo-text:       #000000;
+
+  --glow-color:      rgba(0, 0, 0, 0.12);
+  --gradient-subtle: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 60%);
+
+  --scrollbar-thumb: rgba(255, 255, 255, 0.10);
+  --scrollbar-hover: rgba(255, 255, 255, 0.20);
 }
 
+/* Light Tema */
+[data-theme="light"] {
+  --bg:              #F5F5F5;
+  --bg-surface:      #FFFFFF;
+  --bg-surface-hover: #F0F0F0;
+  --bg-elevated:     #FFFFFF;
+  --bg-header:       rgba(255, 255, 255, 0.7);
+
+  --border:          rgba(0, 0, 0, 0.08);
+  --border-hover:    rgba(0, 0, 0, 0.15);
+  --border-strong:   rgba(0, 0, 0, 0.12);
+
+  --text-primary:    #111111;
+  --text-secondary:  #555555;
+  --text-tertiary:   #999999;
+  --text-inverted:   #FFFFFF;
+
+  --input-bg:        #FFFFFF;
+  --input-border:    rgba(0, 0, 0, 0.12);
+  --input-focus:     rgba(0, 0, 0, 0.25);
+
+  --badge-bg:        rgba(0, 0, 0, 0.06);
+  --badge-text:      #666666;
+
+  --btn-primary-bg:  #111111;
+  --btn-primary-text: #FFFFFF;
+  --btn-primary-hover: #333333;
+
+  --logo-bg:         #111111;
+  --logo-text:       #FFFFFF;
+
+  --glow-color:      rgba(0, 0, 0, 0.06);
+  --gradient-subtle: radial-gradient(circle at 50% 0%, rgba(0,0,0,0.02) 0%, transparent 60%);
+
+  --scrollbar-thumb: rgba(0, 0, 0, 0.12);
+  --scrollbar-hover: rgba(0, 0, 0, 0.25);
+}
+
+/* ==============================
+   TAILWIND TEMA ENTEGRASYONU
+   ============================== */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* ==============================
+   GLOBAL STİLLER
+   ============================== */
 body {
-  background-color: var(--background);
-  background-image: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 60%);
-  color: var(--foreground);
+  background-color: var(--bg);
+  background-image: var(--gradient-subtle);
+  color: var(--text-primary);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   min-height: 100vh;
-  /* Scrollbar styling for a cleaner look */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Tema geçişlerinde pürüzsüz animasyon */
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+
+/* Animasyon olan elementlerde çakışmasın */
+[draggable="true"],
+input, textarea, select, button {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease, opacity 0.15s ease;
 }
 
 ::-webkit-scrollbar {
@@ -29,9 +122,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scrollbar-hover);
 }

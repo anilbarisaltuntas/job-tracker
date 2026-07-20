@@ -44,12 +44,22 @@ export default function ApplicationDetail({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/10 bg-[#0A0A0A] shadow-2xl">
+      <div
+        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl shadow-2xl"
+        style={{
+          backgroundColor: 'var(--bg-elevated)',
+          border: '1px solid var(--border-strong)',
+        }}
+      >
         {/* Üst renkli şerit */}
         <div className="h-2 rounded-t-2xl" style={{ backgroundColor: column?.color || '#64748B' }} />
 
         <div className="p-6">
-          <button onClick={onClose} className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-white/10 hover:text-white">✕</button>
+          <button
+            onClick={onClose}
+            className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+            style={{ color: 'var(--text-tertiary)' }}
+          >✕</button>
 
           {/* Durum badge */}
           <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white" style={{ backgroundColor: column?.color || '#64748B' }}>
@@ -57,26 +67,26 @@ export default function ApplicationDetail({
           </span>
 
           {/* Şirket ve Pozisyon */}
-          <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white/90">{application.company_name}</h2>
-          <p className="mt-1 text-lg text-white/50">{application.position}</p>
+          <h2 className="mt-4 text-2xl font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>{application.company_name}</h2>
+          <p className="mt-1 text-lg" style={{ color: 'var(--text-secondary)' }}>{application.position}</p>
 
           {/* Temel Bilgiler */}
           <div className="mt-8 space-y-3">
-            <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
+            <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
               <span>📅</span>
               <div>
-                <p className="text-xs text-white/40">Başvuru Tarihi</p>
-                <p className="text-sm font-medium text-white/80">{formatDate(application.application_date)}</p>
+                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Başvuru Tarihi</p>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{formatDate(application.application_date)}</p>
               </div>
             </div>
 
             {(application.cv_version || application.cv_file_url) && (
-              <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
+              <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                 <span>📄</span>
                 <div className="flex w-full items-center justify-between">
                   <div>
-                    <p className="text-xs text-white/40">CV Versiyonu</p>
-                    <p className="text-sm font-medium text-white/80">{application.cv_version || 'Belirtilmedi'}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>CV Versiyonu</p>
+                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{application.cv_version || 'Belirtilmedi'}</p>
                   </div>
                   {application.cv_file_url && (
                     <a 
@@ -93,20 +103,20 @@ export default function ApplicationDetail({
             )}
 
             {application.source && (
-              <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
+              <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                 <span>🔗</span>
                 <div>
-                  <p className="text-xs text-white/40">Kaynak</p>
-                  <p className="text-sm font-medium text-white/80">{application.source}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Kaynak</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{application.source}</p>
                 </div>
               </div>
             )}
 
             {application.job_url && (
-              <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
+              <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
                 <span>🌐</span>
                 <div>
-                  <p className="text-xs text-white/40">İş İlanı</p>
+                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>İş İlanı</p>
                   <a href={application.job_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-400/90 hover:underline">
                     İlanı Görüntüle ↗
                   </a>
@@ -119,7 +129,7 @@ export default function ApplicationDetail({
               <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${isOverdue ? 'border-red-500/20 bg-red-500/10' : 'border-white/5 bg-white/[0.02]'}`}>
                 <span>{isOverdue ? '⚠️' : '🔔'}</span>
                 <div>
-                  <p className="text-xs text-white/40">Takip Tarihi</p>
+                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Takip Tarihi</p>
                   <p className={`text-sm font-medium ${isOverdue ? 'text-red-400/90' : 'text-white/80'}`}>
                     {formatDate(application.follow_up_date)}
                     {isOverdue && ' — Gecikti!'}
@@ -131,19 +141,23 @@ export default function ApplicationDetail({
 
           {/* İLETİŞİM KİŞİLERİ */}
           {contacts.length > 0 && (
-            <div className="mt-8 border-t border-white/10 pt-6">
-              <h3 className="mb-4 text-sm font-medium text-white/80">
+            <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+              <h3 className="mb-4 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                 👤 İletişim Kişileri ({contacts.length})
               </h3>
               <div className="space-y-3">
                 {contacts.map((contact) => (
-                  <div key={contact.id} className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+                  <div
+                    key={contact.id}
+                    className="rounded-2xl p-4"
+                    style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+                  >
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-medium text-white/90">{contact.name}</p>
-                        {contact.role && <p className="text-xs text-white/50">{contact.role}</p>}
+                        <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
+                        {contact.role && <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{contact.role}</p>}
                         {contact.email && (
-                          <a href={`mailto:${contact.email}`} className="text-xs text-blue-400/90 hover:underline">
+                          <a href={`mailto:${contact.email}`} className="text-xs text-blue-500 hover:underline">
                             {contact.email}
                           </a>
                         )}
@@ -186,19 +200,31 @@ export default function ApplicationDetail({
 
           {/* Notlar */}
           {application.notes && (
-            <div className="mt-8 border-t border-white/10 pt-6">
-              <h3 className="mb-3 text-sm font-medium text-white/80">📝 Notlar</h3>
-              <p className="whitespace-pre-wrap rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-sm text-white/60">
+            <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+              <h3 className="mb-3 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>📝 Notlar</h3>
+              <p
+                className="whitespace-pre-wrap rounded-2xl p-4 text-sm"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
                 {application.notes}
               </p>
             </div>
           )}
 
           {/* Aksiyon Butonları */}
-          <div className="mt-8 flex gap-3 border-t border-white/10 pt-6">
+          <div className="mt-8 flex gap-3 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
             <button
               onClick={() => onEdit(application)}
-              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
+              className="flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+              }}
             >
               Düzenle
             </button>
@@ -206,7 +232,7 @@ export default function ApplicationDetail({
             {!showDeleteConfirm ? (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="rounded-xl border border-red-500/20 px-4 py-2.5 text-sm font-medium text-red-400/90 transition-colors hover:bg-red-500/10"
+                className="rounded-xl border border-red-500/20 px-4 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-500/10"
               >
                 Sil
               </button>
@@ -215,7 +241,14 @@ export default function ApplicationDetail({
                 <button onClick={() => onDelete(application.id)} className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600">
                   Evet, Sil
                 </button>
-                <button onClick={() => setShowDeleteConfirm(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
+                  style={{
+                    border: '1px solid var(--border)',
+                    color: 'var(--text-secondary)',
+                  }}
+                >
                   İptal
                 </button>
               </div>

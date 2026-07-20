@@ -215,20 +215,34 @@ export default function ApplicationForm({
     }
   }
 
-  const inputClass = "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-all focus:border-white/20 focus:bg-white/10"
-  const labelClass = "mb-1.5 block text-xs font-medium text-white/60"
+  const inputStyle: React.CSSProperties = {
+    backgroundColor: 'var(--input-bg)',
+    border: '1px solid var(--input-border)',
+    color: 'var(--text-primary)',
+  }
+  const labelStyle: React.CSSProperties = { color: 'var(--text-secondary)' }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#0A0A0A] p-8 shadow-2xl">
+      <div
+        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl p-8 shadow-2xl"
+        style={{
+          backgroundColor: 'var(--bg-elevated)',
+          border: '1px solid var(--border-strong)',
+        }}
+      >
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-white/10 hover:text-white"
+          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+          style={{ color: 'var(--text-tertiary)' }}
         >
           ✕
         </button>
 
-        <h2 className="mb-8 text-xl font-semibold tracking-tight text-white/90">
+        <h2
+          className="mb-8 text-xl font-semibold tracking-tight"
+          style={{ color: 'var(--text-primary)' }}
+        >
           {isEditing ? 'Başvuruyu Düzenle' : 'Yeni Başvuru'}
         </h2>
 
@@ -242,31 +256,31 @@ export default function ApplicationForm({
           {/* Şirket + Pozisyon */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className={labelClass}>Şirket Adı *</label>
-              <input name="company_name" value={formData.company_name} onChange={handleChange} required placeholder="ör: Google" className={inputClass} />
+              <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Şirket Adı *</label>
+              <input name="company_name" value={formData.company_name} onChange={handleChange} required placeholder="ör: Google" className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
             </div>
             <div>
-              <label className={labelClass}>Pozisyon *</label>
-              <input name="position" value={formData.position} onChange={handleChange} required placeholder="ör: Frontend Developer" className={inputClass} />
+              <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Pozisyon *</label>
+              <input name="position" value={formData.position} onChange={handleChange} required placeholder="ör: Frontend Developer" className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
             </div>
           </div>
 
           {/* Durum + CV */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className={labelClass}>Durum</label>
-              <select name="status" value={formData.status} onChange={handleChange} className={inputClass}>
+              <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Durum</label>
+              <select name="status" value={formData.status} onChange={handleChange} className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}>
                 {KANBAN_COLUMNS.map(col => (
                   <option key={col.id} value={col.id}>{col.emoji} {col.title}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className={labelClass}>CV Versiyonu (Metin)</label>
-              <input name="cv_version" value={formData.cv_version} onChange={handleChange} placeholder="ör: BA v2" className={inputClass} />
+              <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>CV Versiyonu (Metin)</label>
+              <input name="cv_version" value={formData.cv_version} onChange={handleChange} placeholder="ör: BA v2" className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
             </div>
             <div>
-              <label className={labelClass}>CV Dosyası (PDF)</label>
+              <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>CV Dosyası (PDF)</label>
               <input 
                 type="file" 
                 accept=".pdf"
@@ -282,16 +296,16 @@ export default function ApplicationForm({
           {/* Tarihler */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
-              <label className={labelClass}>Başvuru Tarihi *</label>
-              <input name="application_date" type="date" value={formData.application_date} onChange={handleChange} required className={inputClass} />
+              <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Başvuru Tarihi *</label>
+              <input name="application_date" type="date" value={formData.application_date} onChange={handleChange} required className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
             </div>
             <div>
-              <label className={labelClass}>Takip Tarihi</label>
-              <input name="follow_up_date" type="date" value={formData.follow_up_date} onChange={handleChange} className={inputClass} />
+              <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Takip Tarihi</label>
+              <input name="follow_up_date" type="date" value={formData.follow_up_date} onChange={handleChange} className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
             </div>
             <div>
-              <label className={labelClass}>Kaynak</label>
-              <select name="source" value={formData.source} onChange={handleChange} className={inputClass}>
+              <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Kaynak</label>
+              <select name="source" value={formData.source} onChange={handleChange} className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}>
                 <option value="">Seçiniz...</option>
                 {APPLICATION_SOURCES.map(src => (
                   <option key={src.value} value={src.value}>{src.label}</option>
@@ -303,35 +317,44 @@ export default function ApplicationForm({
           {/* ============================== */}
           {/* İLETİŞİM KİŞİLERİ - YENİ */}
           {/* ============================== */}
-          <div className="mt-6 border-t border-white/10 pt-6">
+          <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-white/80">👤 İletişim Kişileri</h3>
+              <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>👤 İletişim Kişileri</h3>
               <button
                 type="button"
                 onClick={addContact}
-                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white/90"
+                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-colors"
+                style={{ color: 'var(--text-secondary)' }}
               >
                 + Kişi Ekle
               </button>
             </div>
 
             {contacts.length === 0 ? (
-              <p className="py-4 text-center text-sm text-slate-500">
+              <p className="py-4 text-center text-sm" style={{ color: 'var(--text-tertiary)' }}>
                 Henüz iletişim kişisi eklenmemiş.{' '}
-                <button type="button" onClick={addContact} className="text-blue-400 hover:underline">
+                <button type="button" onClick={addContact} className="text-blue-500 hover:underline">
                   Ekle
                 </button>
               </p>
             ) : (
               <div className="space-y-4">
                 {contacts.map((contact, index) => (
-                  <div key={index} className="mt-4 rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+                  <div
+                    key={index}
+                    className="mt-4 rounded-2xl p-5"
+                    style={{
+                      backgroundColor: 'var(--bg-surface)',
+                      border: '1px solid var(--border)',
+                    }}
+                  >
                     <div className="mb-3 flex items-center justify-between">
-                      <h4 className="text-xs font-medium text-white/40">Kişi #{index + 1}</h4>
+                      <h4 className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>Kişi #{index + 1}</h4>
                       <button
                         type="button"
                         onClick={() => removeContact(index)}
-                        className="text-xs text-white/30 transition-colors hover:text-red-400"
+                        className="text-xs transition-colors hover:text-red-500"
+                        style={{ color: 'var(--text-tertiary)' }}
                       >
                         Kaldır
                       </button>
@@ -340,30 +363,30 @@ export default function ApplicationForm({
                     {/* Kişi bilgileri */}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                       <div>
-                        <label className={labelClass}>Ad Soyad *</label>
+                        <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Ad Soyad *</label>
                         <input
                           value={contact.name}
                           onChange={(e) => updateContact(index, 'name', e.target.value)}
                           placeholder="ör: Ahmet Yılmaz"
-                          className={inputClass}
+                          className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}
                         />
                       </div>
                       <div>
-                        <label className={labelClass}>Rol/Ünvan</label>
+                        <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Rol/Ünvan</label>
                         <input
                           value={contact.role}
                           onChange={(e) => updateContact(index, 'role', e.target.value)}
                           placeholder="ör: HR Manager"
-                          className={inputClass}
+                          className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}
                         />
                       </div>
                       <div>
-                        <label className={labelClass}>E-posta</label>
+                        <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>E-posta</label>
                         <input
                           value={contact.email}
                           onChange={(e) => updateContact(index, 'email', e.target.value)}
                           placeholder="ör: ahmet@sirket.com"
-                          className={inputClass}
+                          className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}
                         />
                       </div>
                     </div>
@@ -420,22 +443,35 @@ export default function ApplicationForm({
 
           {/* İlan Linki */}
           <div>
-            <label className={labelClass}>İş İlanı Linki</label>
-            <input name="job_url" type="url" value={formData.job_url} onChange={handleChange} placeholder="https://..." className={inputClass} />
+            <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>İş İlanı Linki</label>
+            <input name="job_url" type="url" value={formData.job_url} onChange={handleChange} placeholder="https://..." className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
           </div>
 
           {/* Notlar */}
           <div>
-            <label className={labelClass}>Notlar</label>
-            <textarea name="notes" value={formData.notes} onChange={handleChange} rows={3} placeholder="Mülakat notları, geri bildirimler..." className={inputClass + ' resize-none'} />
+            <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Notlar</label>
+            <textarea name="notes" value={formData.notes} onChange={handleChange} rows={3} placeholder="Mülakat notları, geri bildirimler..." className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
           </div>
 
           {/* Butonlar */}
-          <div className="mt-8 flex justify-end gap-3 border-t border-white/10 pt-6">
-            <button type="button" onClick={onClose} className="rounded-xl px-5 py-2.5 text-sm font-medium text-white/60 transition-colors hover:bg-white/5 hover:text-white/90">
+          <div className="mt-8 flex justify-end gap-3 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
               İptal
             </button>
-            <button type="submit" disabled={loading} className="rounded-xl bg-white px-6 py-2.5 text-sm font-medium text-black transition-all hover:bg-neutral-200 disabled:opacity-50">
+            <button
+              type="submit"
+              disabled={loading}
+              className="rounded-xl px-6 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
+              style={{
+                backgroundColor: 'var(--btn-primary-bg)',
+                color: 'var(--btn-primary-text)',
+              }}
+            >
               {loading ? 'Kaydediliyor...' : isEditing ? 'Değişiklikleri Kaydet' : 'Başvuru Ekle'}
             </button>
           </div>

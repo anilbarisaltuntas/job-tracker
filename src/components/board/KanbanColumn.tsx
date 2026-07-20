@@ -48,9 +48,12 @@ export default function KanbanColumn({
       <div className="mb-3 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <span className="text-sm">{emoji}</span>
-          <h2 className="text-sm font-medium text-white/80">{title}</h2>
+          <h2 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{title}</h2>
           {/* Başvuru sayısı badge'i */}
-          <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/10 px-1.5 text-xs font-medium text-white/60">
+          <span
+            className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-medium"
+            style={{ backgroundColor: 'var(--badge-bg)', color: 'var(--badge-text)' }}
+          >
             {applications.length}
           </span>
         </div>
@@ -58,7 +61,8 @@ export default function KanbanColumn({
         {/* Yeni başvuru ekleme butonu */}
         <button
           onClick={onAddClick}
-          className="flex h-6 w-6 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white/90"
+          className="flex h-6 w-6 items-center justify-center rounded-md transition-colors"
+          style={{ color: 'var(--text-tertiary)' }}
           title="Yeni başvuru ekle"
         >
           +
@@ -108,10 +112,10 @@ export default function KanbanColumn({
             {/* Sütun boşken göster */}
             {applications.length === 0 && !snapshot.isDraggingOver && (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-sm text-slate-500">Henüz başvuru yok</p>
+                <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Henüz başvuru yok</p>
                 <button
                   onClick={onAddClick}
-                  className="mt-2 text-xs text-blue-400 hover:text-blue-300"
+                  className="mt-2 text-xs text-blue-500 hover:text-blue-400"
                 >
                   + Başvuru Ekle
                 </button>

@@ -2,19 +2,6 @@
 
 /**
  * LOGIN (GİRİŞ) SAYFASI
- * 
- * 'use client' → Bu dosya tarayıcıda çalışır (Server Component değil).
- * Neden? Çünkü:
- *   - useState ile form verilerini tutuyoruz
- *   - onClick ile butona tıklamayı dinliyoruz
- *   - Bunlar sadece tarayıcıda çalışan özellikler
- * 
- * AKIŞ:
- * 1. Kullanıcı email + şifre girer
- * 2. "Giriş Yap" butonuna basar
- * 3. Supabase Auth API'sine istek gider
- * 4. Doğruysa → /board'a yönlendir
- * 5. Yanlışsa → hata mesajı göster
  */
 
 import { useState } from 'react'
@@ -23,27 +10,19 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function LoginPage() {
-  // STATE (Durum) — Formun anlık değerlerini tutar
-  const [email, setEmail] = useState('')           // Email input'unun değeri
-  const [password, setPassword] = useState('')     // Şifre input'unun değeri
-  const [error, setError] = useState<string | null>(null)  // Hata mesajı
-  const [loading, setLoading] = useState(false)    // "Giriş yapılıyor..." durumu
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
-  // Router — sayfalar arası yönlendirme için
   const router = useRouter()
-  // Supabase client — auth işlemleri için
   const supabase = createClient()
 
-  /**
-   * Form gönderildiğinde çalışan fonksiyon.
-   * async/await → Supabase'den cevap gelene kadar bekler.
-   */
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()  // Sayfanın yenilenmesini engelle (formun varsayılan davranışı)
+    e.preventDefault()
     setLoading(true)
     setError(null)
 
-    // Supabase'e giriş isteği gönder
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -53,37 +32,50 @@ export default function LoginPage() {
       setError('E-posta veya şifre hatalı.')
       setLoading(false)
     } else {
-      // Başarılı giriş → Kanban board'a yönlendir
       router.push('/board')
-      router.refresh() // Middleware'in yeni oturumu görmesi için
+      router.refresh()
     }
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-xl">
+    <div
+      className="rounded-2xl p-8 shadow-2xl backdrop-blur-xl"
+      style={{
+        backgroundColor: 'var(--bg-elevated)',
+        border: '1px solid var(--border-strong)',
+      }}
+    >
       {/* Logo / Başlık */}
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-2xl shadow-lg">
-          💼
+        <div
+          className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl text-2xl font-bold shadow-lg"
+          style={{ backgroundColor: 'var(--logo-bg)', color: 'var(--logo-text)' }}
+        >
+          J
         </div>
-        <h1 className="text-2xl font-bold text-white">JobTracker</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          JobTracker
+        </h1>
+        <p className="mt-2 text-sm" style={{ color: 'var(--text-tertiary)' }}>
           İş başvurularını takip et, organize ol
         </p>
       </div>
 
       {/* Hata mesajı */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-500">
           {error}
         </div>
       )}
 
       {/* Giriş Formu */}
       <form onSubmit={handleLogin} className="space-y-4">
-        {/* Email alanı */}
         <div>
-          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-300">
+          <label
+            htmlFor="email"
+            className="mb-1.5 block text-sm font-medium"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             E-posta
           </label>
           <input
@@ -93,13 +85,23 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="ornek@email.com"
             required
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder-slate-500 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg px-4 py-2.5 outline-none transition-colors"
+            style={{
+              backgroundColor: 'var(--input-bg)',
+              border: '1px solid var(--input-border)',
+              color: 'var(--text-primary)',
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--input-focus)' }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--input-border)' }}
           />
         </div>
 
-        {/* Şifre alanı */}
         <div>
-          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-slate-300">
+          <label
+            htmlFor="password"
+            className="mb-1.5 block text-sm font-medium"
+            style={{ color: 'var(--text-secondary)' }}
+          >
             Şifre
           </label>
           <input
@@ -110,15 +112,27 @@ export default function LoginPage() {
             placeholder="••••••••"
             required
             minLength={6}
-            className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder-slate-500 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg px-4 py-2.5 outline-none transition-colors"
+            style={{
+              backgroundColor: 'var(--input-bg)',
+              border: '1px solid var(--input-border)',
+              color: 'var(--text-primary)',
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--input-focus)' }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--input-border)' }}
           />
         </div>
 
-        {/* Giriş butonu */}
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-4 py-2.5 font-medium text-white shadow-lg transition-all hover:from-blue-600 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full rounded-lg px-4 py-2.5 font-medium shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-50"
+          style={{
+            backgroundColor: 'var(--btn-primary-bg)',
+            color: 'var(--btn-primary-text)',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)' }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--btn-primary-bg)' }}
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -135,11 +149,11 @@ export default function LoginPage() {
       </form>
 
       {/* Kayıt linki */}
-      <p className="mt-6 text-center text-sm text-slate-400">
+      <p className="mt-6 text-center text-sm" style={{ color: 'var(--text-tertiary)' }}>
         Hesabınız yok mu?{' '}
         <Link
           href="/register"
-          className="font-medium text-blue-400 transition-colors hover:text-blue-300"
+          className="font-medium text-blue-500 transition-colors hover:text-blue-400"
         >
           Kayıt Ol
         </Link>

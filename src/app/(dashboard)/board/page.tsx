@@ -26,8 +26,13 @@ export default async function BoardPage() {
       <Header />
       <main className="flex-1 overflow-y-auto p-6">
         <div className="mb-8 pl-2">
-          <h2 className="text-2xl font-semibold tracking-tight text-white/90">Başvuru Takip Panosu</h2>
-          <p className="mt-1 text-sm text-white/40">
+          <h2
+            className="text-2xl font-semibold tracking-tight"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Başvuru Takip Panosu
+          </h2>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-tertiary)' }}>
             İş arayış sürecinizi sürükle-bırak yöntemiyle yönetin
           </p>
         </div>

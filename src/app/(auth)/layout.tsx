@@ -11,7 +11,10 @@ export default function AuthLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 px-4">
+    <div
+      className="flex min-h-screen items-center justify-center px-4"
+      style={{ backgroundColor: 'var(--bg)' }}
+    >
       {/* Arka plandaki dekoratif elementler */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
