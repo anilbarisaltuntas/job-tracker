@@ -297,7 +297,7 @@ export default function ApplicationForm({
                       // Bu butona tıklandığında eski CV linkini (sadece UI'da) geçici olarak siliyoruz
                       // ki dosya seçme input'u ortaya çıksın.
                       if (editingApplication) {
-                        editingApplication.cv_file_url = undefined;
+                        editingApplication.cv_file_url = null;
                         // Sadece render'ı tetiklemek için state'i küçük bir şekilde kandırıyoruz
                         setFormData(prev => ({ ...prev }));
                       }
