@@ -8,7 +8,8 @@
  */
 
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useTheme } from '@/context/ThemeContext'
 
@@ -16,6 +17,7 @@ export default function Header() {
   const [userEmail, setUserEmail] = useState<string>('')
   const supabase = createClient()
   const router = useRouter()
+  const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
@@ -41,20 +43,45 @@ export default function Header() {
       }}
     >
       <div className="flex h-14 items-center justify-between px-6">
-        {/* Sol: Logo */}
-        <div className="flex items-center gap-3">
-          <div
-            className="flex h-7 w-7 items-center justify-center rounded-md"
-            style={{ backgroundColor: 'var(--logo-bg)' }}
-          >
-            <span className="text-sm font-bold" style={{ color: 'var(--logo-text)' }}>J</span>
+        {/* Sol: Logo ve Navigasyon */}
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-7 w-7 items-center justify-center rounded-md"
+              style={{ backgroundColor: 'var(--logo-bg)' }}
+            >
+              <span className="text-sm font-bold" style={{ color: 'var(--logo-text)' }}>J</span>
+            </div>
+            <h1
+              className="text-base font-semibold tracking-tight hidden sm:block"
+              style={{ color: 'var(--text-primary)' }}
+            >
+              JobTracker
+            </h1>
           </div>
-          <h1
-            className="text-base font-semibold tracking-tight"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            JobTracker
-          </h1>
+
+          <nav className="flex items-center gap-1 rounded-xl p-1" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+            <Link 
+              href="/board"
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-all ${
+                pathname === '/board' 
+                  ? 'bg-blue-500 text-white shadow-md' 
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-500/10'
+              }`}
+            >
+              📋 Pano
+            </Link>
+            <Link 
+              href="/saved"
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-all ${
+                pathname === '/saved' 
+                  ? 'bg-blue-500 text-white shadow-md' 
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-500/10'
+              }`}
+            >
+              ⭐ Kaydedilenler
+            </Link>
+          </nav>
         </div>
 
         {/* Sağ: Tema + Kullanıcı bilgisi + Çıkış */}

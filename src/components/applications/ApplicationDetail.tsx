@@ -8,9 +8,10 @@
  * - Her kişi için mesaj/mail durumunu gösterir
  */
 
-import { Application } from '@/lib/types'
+import { Application, ApplicationHistory } from '@/lib/types'
 import { KANBAN_COLUMNS } from '@/lib/constants'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 interface ApplicationDetailProps {
   application: Application
@@ -26,7 +27,25 @@ export default function ApplicationDetail({
   onDelete,
 }: ApplicationDetailProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [history, setHistory] = useState<ApplicationHistory[]>([])
+  
   const column = KANBAN_COLUMNS.find(col => col.id === application.status)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const { data, error } = await supabase
+        .from('application_history')
+        .select('*')
+        .eq('application_id', application.id)
+        .order('created_at', { ascending: false })
+      
+      if (data) {
+        setHistory(data)
+      }
+    }
+    fetchHistory()
+  }, [application.id, supabase])
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '—'
@@ -93,9 +112,15 @@ export default function ApplicationDetail({
                       href={application.cv_file_url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10"
+                      download
+                      className="rounded-xl px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
+                      style={{
+                        backgroundColor: 'var(--badge-bg)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--text-primary)',
+                      }}
                     >
-                      CV'yi Görüntüle ↗
+                      İndir / Görüntüle 📥
                     </a>
                   )}
                 </div>
@@ -126,11 +151,17 @@ export default function ApplicationDetail({
 
             {/* Takip tarihi */}
             {application.follow_up_date && (
-              <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${isOverdue ? 'border-red-500/20 bg-red-500/10' : 'border-white/5 bg-white/[0.02]'}`}>
+              <div
+                className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${isOverdue ? 'border-red-500/20 bg-red-500/10' : ''}`}
+                style={!isOverdue ? { backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' } : undefined}
+              >
                 <span>{isOverdue ? '⚠️' : '🔔'}</span>
                 <div>
                   <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Takip Tarihi</p>
-                  <p className={`text-sm font-medium ${isOverdue ? 'text-red-400/90' : 'text-white/80'}`}>
+                  <p
+                    className={`text-sm font-medium ${isOverdue ? 'text-red-500' : ''}`}
+                    style={!isOverdue ? { color: 'var(--text-primary)' } : undefined}
+                  >
                     {formatDate(application.follow_up_date)}
                     {isOverdue && ' — Gecikti!'}
                   </p>
@@ -166,22 +197,28 @@ export default function ApplicationDetail({
 
                     {/* Mesaj / Mail durumu */}
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        contact.message_sent 
-                          ? 'bg-green-500/20 text-green-400' 
-                          : 'bg-slate-600/50 text-slate-400'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border ${
+                          contact.message_sent 
+                            ? 'border-green-500/20 bg-green-500/10 text-green-500' 
+                            : ''
+                        }`}
+                        style={!contact.message_sent ? { backgroundColor: 'var(--badge-bg)', borderColor: 'var(--border)', color: 'var(--text-secondary)' } : undefined}
+                      >
                         💬 {contact.message_sent 
                           ? `Mesaj gönderildi${contact.message_date ? ` • ${formatDate(contact.message_date)}` : ''}`
                           : 'Mesaj gönderilmedi'
                         }
                       </span>
 
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                        contact.email_sent 
-                          ? 'bg-purple-500/20 text-purple-400' 
-                          : 'bg-slate-600/50 text-slate-400'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border ${
+                          contact.email_sent 
+                            ? 'border-purple-500/20 bg-purple-500/10 text-purple-500' 
+                            : ''
+                        }`}
+                        style={!contact.email_sent ? { backgroundColor: 'var(--badge-bg)', borderColor: 'var(--border)', color: 'var(--text-secondary)' } : undefined}
+                      >
                         📧 {contact.email_sent 
                           ? `Mail gönderildi${contact.email_date ? ` • ${formatDate(contact.email_date)}` : ''}`
                           : 'Mail gönderilmedi'
@@ -202,18 +239,53 @@ export default function ApplicationDetail({
           {application.notes && (
             <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
               <h3 className="mb-3 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>📝 Notlar</h3>
-              <p
-                className="whitespace-pre-wrap rounded-2xl p-4 text-sm"
+              <div
+                className="tiptap-editor rounded-2xl p-4 text-sm"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
                   border: '1px solid var(--border)',
                   color: 'var(--text-secondary)',
                 }}
-              >
-                {application.notes}
-              </p>
+                dangerouslySetInnerHTML={{ __html: application.notes }}
+              />
             </div>
           )}
+
+          {/* Geçmiş / Timeline */}
+          <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+            <h3 className="mb-4 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>⏳ Serüven (Geçmiş)</h3>
+            
+            {history.length === 0 ? (
+              <p className="text-xs italic text-slate-500">Henüz bir geçmiş kaydı yok.</p>
+            ) : (
+              <div className="relative space-y-4 before:absolute before:inset-0 before:ml-2 before:h-full before:w-0.5 before:-translate-x-px before:bg-[var(--border)]">
+                {history.map((item) => (
+                  <div key={item.id} className="relative flex items-start gap-4">
+                    {/* Yuvarlak Node */}
+                    <div className="relative z-10 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--bg-elevated)] shadow-[0_0_0_4px_var(--bg-elevated)] ring-1 ring-[var(--border-strong)] mt-1">
+                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                    </div>
+                    {/* İçerik */}
+                    <div className="flex-1 rounded-2xl p-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+                      <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{item.description}</p>
+                      
+                      {(item.old_status || item.new_status) && item.event_type === 'STATUS_CHANGED' && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] font-medium text-slate-500">
+                          {item.old_status && <span>{KANBAN_COLUMNS.find(c => c.id === item.old_status)?.title || item.old_status}</span>}
+                          {item.old_status && item.new_status && <span>→</span>}
+                          {item.new_status && <span className="text-blue-500">{KANBAN_COLUMNS.find(c => c.id === item.new_status)?.title || item.new_status}</span>}
+                        </div>
+                      )}
+
+                      <p className="mt-1.5 text-[10px] opacity-60" style={{ color: 'var(--text-tertiary)' }}>
+                        {new Date(item.created_at).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Aksiyon Butonları */}
           <div className="mt-8 flex gap-3 pt-6" style={{ borderTop: '1px solid var(--border)' }}>

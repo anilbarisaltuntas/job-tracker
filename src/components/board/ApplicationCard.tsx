@@ -34,7 +34,7 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer rounded-xl p-4 transition-all hover:-translate-y-0.5"
+      className="group cursor-pointer rounded-xl p-3 transition-all hover:-translate-y-0.5"
       style={{
         backgroundColor: 'var(--bg-surface)',
         border: '1px solid var(--border)',
@@ -53,22 +53,22 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
     >
       {/* Üst renkli çizgi */}
       <div
-        className="mb-3 h-[3px] w-10 rounded-full opacity-80"
+        className="mb-2 h-[3px] w-8 rounded-full opacity-80"
         style={{ backgroundColor: column?.color || '#64748B' }}
       />
 
       {/* Şirket adı */}
-      <h3 className="font-medium" style={{ color: 'var(--text-primary)' }}>
+      <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
         {application.company_name}
       </h3>
 
       {/* Pozisyon */}
-      <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+      <p className="mt-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
         {application.position}
       </p>
 
       {/* Alt bilgiler */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
         <span
           className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs"
           style={{
@@ -102,7 +102,7 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
 
       {/* Takip tarihi uyarısı */}
       {application.follow_up_date && (
-        <div className={`mt-3 flex items-center gap-1.5 text-xs ${
+        <div className={`mt-2.5 flex items-center gap-1 text-[11px] ${
           isOverdue ? 'text-red-500' : ''
         }`} style={isOverdue ? {} : { color: 'var(--text-tertiary)' }}>
           {isOverdue ? '⚠️' : '🔔'} Takip: {formatDate(application.follow_up_date)}

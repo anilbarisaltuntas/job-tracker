@@ -7,15 +7,15 @@
 /* Dark Tema (Varsayılan) */
 :root,
 [data-theme="dark"] {
-  --bg:              #0A0A0A;
-  --bg-surface:      rgba(255, 255, 255, 0.02);
-  --bg-surface-hover: rgba(255, 255, 255, 0.04);
-  --bg-elevated:     #0A0A0A;
-  --bg-header:       rgba(10, 10, 10, 0.6);
+  --bg:              #121214;
+  --bg-surface:      rgba(255, 255, 255, 0.04);
+  --bg-surface-hover: rgba(255, 255, 255, 0.08);
+  --bg-elevated:     #18181B;
+  --bg-header:       rgba(18, 18, 20, 0.8);
 
-  --border:          rgba(255, 255, 255, 0.05);
-  --border-hover:    rgba(255, 255, 255, 0.10);
-  --border-strong:   rgba(255, 255, 255, 0.10);
+  --border:          rgba(255, 255, 255, 0.10);
+  --border-hover:    rgba(255, 255, 255, 0.20);
+  --border-strong:   rgba(255, 255, 255, 0.20);
 
   --text-primary:    rgba(255, 255, 255, 0.90);
   --text-secondary:  rgba(255, 255, 255, 0.60);
@@ -96,7 +96,6 @@
    ============================== */
 body {
   background-color: var(--bg);
-  background-image: var(--gradient-subtle);
   color: var(--text-primary);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
   min-height: 100vh;
@@ -127,4 +126,41 @@ input, textarea, select, button {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-hover);
+}
+
+/* =========================================
+   TIPTAP RICH TEXT EDITOR STYLES
+   ========================================= */
+.tiptap-editor {
+  line-height: 1.5;
+}
+
+.tiptap-editor p {
+  margin-bottom: 0.75em;
+}
+
+.tiptap-editor ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75em;
+}
+
+.tiptap-editor ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75em;
+}
+
+.tiptap-editor strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Placeholder stili */
+.tiptap-editor p.is-editor-empty:first-child::before {
+  color: var(--text-tertiary);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
 }

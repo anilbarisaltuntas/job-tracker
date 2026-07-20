@@ -4,7 +4,7 @@
  * LOGIN (GİRİŞ) SAYFASI
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -14,6 +14,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+
+  // Sayfa yüklendiğinde localStorage'da kayıtlı email var mı kontrol et
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail')
+    if (savedEmail) {
+      setEmail(savedEmail)
+      setRememberMe(true)
+    }
+  }, [])
 
   const router = useRouter()
   const supabase = createClient()
@@ -22,6 +32,13 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+
+    // "Beni Hatırla" seçiliyse e-postayı kaydet, değilse sil
+    if (rememberMe) {
+      localStorage.setItem('rememberedEmail', email)
+    } else {
+      localStorage.removeItem('rememberedEmail')
+    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -121,6 +138,28 @@ export default function LoginPage() {
             onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--input-focus)' }}
             onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--input-border)' }}
           />
+        </div>
+
+        {/* Beni Hatırla Checkbox */}
+        <div className="flex items-center">
+          <input
+            id="rememberMe"
+            type="checkbox"
+            checked={rememberMe}
+            onChange={(e) => setRememberMe(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+            style={{
+              backgroundColor: 'var(--input-bg)',
+              borderColor: 'var(--input-border)'
+            }}
+          />
+          <label
+            htmlFor="rememberMe"
+            className="ml-2 block text-sm"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            E-posta adresimi hatırla
+          </label>
         </div>
 
         <button

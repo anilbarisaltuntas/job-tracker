@@ -13,6 +13,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Application, ApplicationStatus, ContactFormData } from '@/lib/types'
 import { KANBAN_COLUMNS, APPLICATION_SOURCES } from '@/lib/constants'
+import RichTextEditor from '../ui/RichTextEditor'
 
 interface ApplicationFormProps {
   editingApplication: Application | null
@@ -281,14 +282,46 @@ export default function ApplicationForm({
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>CV Dosyası (PDF)</label>
-              <input 
-                type="file" 
-                accept=".pdf"
-                onChange={(e) => setCvFile(e.target.files?.[0] || null)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-white/20"
-              />
-              {editingApplication?.cv_file_url && !cvFile && (
-                <p className="mt-1.5 text-xs text-blue-400">Mevcut CV yüklü</p>
+              
+              {editingApplication?.cv_file_url && !cvFile ? (
+                <div 
+                  className="flex items-center justify-between rounded-xl px-3 py-2 text-sm"
+                  style={{ backgroundColor: 'var(--badge-bg)', border: '1px solid var(--border)' }}
+                >
+                  <span className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                    📄 Mevcut CV Yüklü
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Bu butona tıklandığında eski CV linkini (sadece UI'da) geçici olarak siliyoruz
+                      // ki dosya seçme input'u ortaya çıksın.
+                      if (editingApplication) {
+                        editingApplication.cv_file_url = undefined;
+                        // Sadece render'ı tetiklemek için state'i küçük bir şekilde kandırıyoruz
+                        setFormData(prev => ({ ...prev }));
+                      }
+                    }}
+                    className="text-xs text-blue-500 hover:underline"
+                  >
+                    Değiştir
+                  </button>
+                </div>
+              ) : (
+                <input 
+                  type="file" 
+                  accept=".pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] || null
+                    setCvFile(file)
+                    if (file) {
+                      const nameWithoutExt = file.name.replace(/\.pdf$/i, '')
+                      setFormData(prev => ({ ...prev, cv_version: nameWithoutExt }))
+                    }
+                  }}
+                  className="w-full rounded-xl px-3 py-1.5 text-sm outline-none transition-all file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-[var(--badge-bg)] file:px-3 file:py-1 file:text-xs file:font-medium file:text-[var(--text-primary)] hover:file:bg-[var(--border-hover)]"
+                  style={inputStyle}
+                />
               )}
             </div>
           </div>
@@ -395,12 +428,13 @@ export default function ApplicationForm({
                     <div className="mt-3 flex flex-wrap gap-4">
                       {/* Mesaj gönderildi mi? */}
                       <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-2 text-xs text-slate-300">
+                        <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                           <input
                             type="checkbox"
                             checked={contact.message_sent}
                             onChange={(e) => updateContact(index, 'message_sent', e.target.checked)}
-                            className="h-3.5 w-3.5 rounded border-slate-500 bg-slate-600 text-blue-500"
+                            className="h-3.5 w-3.5 rounded text-blue-500"
+                            style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
                           />
                           💬 Mesaj gönderildi
                         </label>
@@ -409,19 +443,21 @@ export default function ApplicationForm({
                             type="date"
                             value={contact.message_date}
                             onChange={(e) => updateContact(index, 'message_date', e.target.value)}
-                            className="rounded border border-slate-600 bg-slate-700 px-2 py-1 text-xs text-white"
+                            className="rounded px-2 py-1 text-xs"
+                            style={inputStyle}
                           />
                         )}
                       </div>
 
                       {/* Mail gönderildi mi? */}
                       <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-2 text-xs text-slate-300">
+                        <label className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
                           <input
                             type="checkbox"
                             checked={contact.email_sent}
                             onChange={(e) => updateContact(index, 'email_sent', e.target.checked)}
-                            className="h-3.5 w-3.5 rounded border-slate-500 bg-slate-600 text-purple-500"
+                            className="h-3.5 w-3.5 rounded text-purple-500"
+                            style={{ backgroundColor: 'var(--input-bg)', borderColor: 'var(--input-border)' }}
                           />
                           📧 Mail gönderildi
                         </label>
@@ -430,7 +466,8 @@ export default function ApplicationForm({
                             type="date"
                             value={contact.email_date}
                             onChange={(e) => updateContact(index, 'email_date', e.target.value)}
-                            className="rounded border border-slate-600 bg-slate-700 px-2 py-1 text-xs text-white"
+                            className="rounded px-2 py-1 text-xs"
+                            style={inputStyle}
                           />
                         )}
                       </div>
@@ -450,7 +487,10 @@ export default function ApplicationForm({
           {/* Notlar */}
           <div>
             <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Notlar</label>
-            <textarea name="notes" value={formData.notes} onChange={handleChange} rows={3} placeholder="Mülakat notları, geri bildirimler..." className="w-full resize-none rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
+            <RichTextEditor 
+              content={formData.notes}
+              onChange={(html) => setFormData(prev => ({ ...prev, notes: html }))}
+            />
           </div>
 
           {/* Butonlar */}

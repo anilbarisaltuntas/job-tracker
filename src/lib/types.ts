@@ -103,3 +103,26 @@ export interface Notification {
   created_at: string
   application?: Application // İlişkili başvuru (join ile gelir)
 }
+
+/** Geçmiş / Log veri yapısı */
+export interface ApplicationHistory {
+  id: string
+  application_id: string
+  user_id: string
+  event_type: 'CREATED' | 'STATUS_CHANGED' | string
+  old_status: ApplicationStatus | null
+  new_status: ApplicationStatus | null
+  description: string
+  created_at: string
+}
+
+/** Kaydedilen / Planlanan İlan */
+export interface SavedJob {
+  id: string
+  user_id: string
+  company_name: string
+  position: string
+  posted_date: string | null
+  job_url: string | null
+  created_at: string
+}
