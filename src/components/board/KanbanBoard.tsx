@@ -182,7 +182,7 @@ export default function KanbanBoard() {
         onDragEnd → kart bırakıldığında ne yapılacağını belirler.
       */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="grid grid-cols-1 gap-6 pb-8 sm:grid-cols-2 xl:grid-cols-4">
           {KANBAN_COLUMNS.map(column => {
             // Bu sütuna ait başvuruları filtrele
             const columnApps = applications

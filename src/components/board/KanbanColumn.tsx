@@ -43,17 +43,14 @@ export default function KanbanColumn({
   onAddClick,
 }: KanbanColumnProps) {
   return (
-    <div className="flex h-full w-[320px] min-w-[320px] flex-col rounded-xl border border-slate-700/50 bg-slate-800/50">
+    <div className="flex h-[400px] w-full flex-col">
       {/* Sütun başlığı */}
-      <div className="flex items-center justify-between border-b border-slate-700/50 px-4 py-3">
+      <div className="mb-3 flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
-          <span>{emoji}</span>
-          <h2 className="text-sm font-semibold text-white">{title}</h2>
+          <span className="text-sm">{emoji}</span>
+          <h2 className="text-sm font-medium text-white/80">{title}</h2>
           {/* Başvuru sayısı badge'i */}
-          <span
-            className="flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-bold text-white"
-            style={{ backgroundColor: color }}
-          >
+          <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-white/10 px-1.5 text-xs font-medium text-white/60">
             {applications.length}
           </span>
         </div>
@@ -61,33 +58,21 @@ export default function KanbanColumn({
         {/* Yeni başvuru ekleme butonu */}
         <button
           onClick={onAddClick}
-          className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-700 hover:text-white"
+          className="flex h-6 w-6 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white/90"
           title="Yeni başvuru ekle"
         >
           +
         </button>
       </div>
 
-      {/* 
-        DROPPABLE ALAN
-        
-        Droppable, @hello-pangea/dnd'nin "bırakılabilir alan" bileşeni.
-        droppableId → bu sütunun benzersiz kimliği (durum kodu)
-        
-        "render props" pattern'i kullanır:
-        (provided, snapshot) => ... şeklinde bir fonksiyon alır.
-        - provided.innerRef → DOM referansı (kütüphanenin elementi bulması için)
-        - provided.droppableProps → gerekli HTML özellikleri
-        - provided.placeholder → sürüklenen kartın boşluğunu tutar
-        - snapshot.isDraggingOver → üzerine kart sürükleniyor mu?
-      */}
+      {/* DROPPABLE ALAN */}
       <Droppable droppableId={columnId}>
         {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-1 space-y-3 overflow-y-auto p-3 transition-colors ${
-              snapshot.isDraggingOver ? 'bg-slate-700/30' : ''
+            className={`flex-1 space-y-3 overflow-y-auto rounded-xl p-1 transition-colors ${
+              snapshot.isDraggingOver ? 'bg-white/[0.02]' : ''
             }`}
           >
             {applications.map((app, index) => (

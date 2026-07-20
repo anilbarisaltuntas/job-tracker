@@ -31,24 +31,24 @@ export default function Header() {
   }
 
   return (
-    <header className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-xl">
-      <div className="flex h-16 items-center justify-between px-6">
+    <header className="sticky top-0 z-40 border-b border-white/[0.05] bg-[#0A0A0A]/60 backdrop-blur-md">
+      <div className="flex h-14 items-center justify-between px-6">
         {/* Sol: Logo */}
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 text-lg shadow-lg">
-            💼
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white">
+            <span className="text-sm font-bold text-black">J</span>
           </div>
-          <h1 className="text-lg font-bold text-white">JobTracker</h1>
+          <h1 className="text-base font-semibold tracking-tight text-white/90">JobTracker</h1>
         </div>
 
         {/* Sağ: Kullanıcı bilgisi + Çıkış */}
         <div className="flex items-center gap-4">
-          <span className="hidden text-sm text-slate-400 sm:block">
+          <span className="hidden text-sm text-white/40 sm:block">
             {userEmail}
           </span>
           <button
             onClick={handleLogout}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-white/50 transition-colors hover:bg-white/5 hover:text-white/90"
           >
             Çıkış Yap
           </button>

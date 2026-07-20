@@ -43,13 +43,13 @@ export default function ApplicationDetail({
   const contacts = application.contacts || []
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-700 bg-slate-800 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/10 bg-[#0A0A0A] shadow-2xl">
         {/* Üst renkli şerit */}
         <div className="h-2 rounded-t-2xl" style={{ backgroundColor: column?.color || '#64748B' }} />
 
         <div className="p-6">
-          <button onClick={onClose} className="absolute right-4 top-6 rounded-lg p-1 text-slate-400 hover:bg-slate-700 hover:text-white">✕</button>
+          <button onClick={onClose} className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-white/10 hover:text-white">✕</button>
 
           {/* Durum badge */}
           <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white" style={{ backgroundColor: column?.color || '#64748B' }}>
@@ -57,45 +57,57 @@ export default function ApplicationDetail({
           </span>
 
           {/* Şirket ve Pozisyon */}
-          <h2 className="mt-4 text-2xl font-bold text-white">{application.company_name}</h2>
-          <p className="mt-1 text-lg text-slate-400">{application.position}</p>
+          <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white/90">{application.company_name}</h2>
+          <p className="mt-1 text-lg text-white/50">{application.position}</p>
 
           {/* Temel Bilgiler */}
-          <div className="mt-6 space-y-3">
-            <div className="flex items-center gap-3 rounded-lg bg-slate-700/30 px-3 py-2">
+          <div className="mt-8 space-y-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
               <span>📅</span>
               <div>
-                <p className="text-xs text-slate-500">Başvuru Tarihi</p>
-                <p className="text-sm text-slate-200">{formatDate(application.application_date)}</p>
+                <p className="text-xs text-white/40">Başvuru Tarihi</p>
+                <p className="text-sm font-medium text-white/80">{formatDate(application.application_date)}</p>
               </div>
             </div>
 
-            {application.cv_version && (
-              <div className="flex items-center gap-3 rounded-lg bg-slate-700/30 px-3 py-2">
+            {(application.cv_version || application.cv_file_url) && (
+              <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
                 <span>📄</span>
-                <div>
-                  <p className="text-xs text-slate-500">CV Versiyonu</p>
-                  <p className="text-sm text-slate-200">{application.cv_version}</p>
+                <div className="flex w-full items-center justify-between">
+                  <div>
+                    <p className="text-xs text-white/40">CV Versiyonu</p>
+                    <p className="text-sm font-medium text-white/80">{application.cv_version || 'Belirtilmedi'}</p>
+                  </div>
+                  {application.cv_file_url && (
+                    <a 
+                      href={application.cv_file_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10"
+                    >
+                      CV'yi Görüntüle ↗
+                    </a>
+                  )}
                 </div>
               </div>
             )}
 
             {application.source && (
-              <div className="flex items-center gap-3 rounded-lg bg-slate-700/30 px-3 py-2">
+              <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
                 <span>🔗</span>
                 <div>
-                  <p className="text-xs text-slate-500">Kaynak</p>
-                  <p className="text-sm text-slate-200">{application.source}</p>
+                  <p className="text-xs text-white/40">Kaynak</p>
+                  <p className="text-sm font-medium text-white/80">{application.source}</p>
                 </div>
               </div>
             )}
 
             {application.job_url && (
-              <div className="flex items-center gap-3 rounded-lg bg-slate-700/30 px-3 py-2">
+              <div className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 py-3">
                 <span>🌐</span>
                 <div>
-                  <p className="text-xs text-slate-500">İş İlanı</p>
-                  <a href={application.job_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline">
+                  <p className="text-xs text-white/40">İş İlanı</p>
+                  <a href={application.job_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-400/90 hover:underline">
                     İlanı Görüntüle ↗
                   </a>
                 </div>
@@ -104,11 +116,11 @@ export default function ApplicationDetail({
 
             {/* Takip tarihi */}
             {application.follow_up_date && (
-              <div className={`flex items-center gap-3 rounded-lg px-3 py-2 ${isOverdue ? 'bg-red-500/10 border border-red-500/20' : 'bg-slate-700/30'}`}>
+              <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${isOverdue ? 'border-red-500/20 bg-red-500/10' : 'border-white/5 bg-white/[0.02]'}`}>
                 <span>{isOverdue ? '⚠️' : '🔔'}</span>
                 <div>
-                  <p className="text-xs text-slate-500">Takip Tarihi</p>
-                  <p className={`text-sm ${isOverdue ? 'text-red-400 font-semibold' : 'text-slate-200'}`}>
+                  <p className="text-xs text-white/40">Takip Tarihi</p>
+                  <p className={`text-sm font-medium ${isOverdue ? 'text-red-400/90' : 'text-white/80'}`}>
                     {formatDate(application.follow_up_date)}
                     {isOverdue && ' — Gecikti!'}
                   </p>
@@ -119,19 +131,19 @@ export default function ApplicationDetail({
 
           {/* İLETİŞİM KİŞİLERİ */}
           {contacts.length > 0 && (
-            <div className="mt-6">
-              <h3 className="mb-3 text-sm font-semibold text-slate-300">
+            <div className="mt-8 border-t border-white/10 pt-6">
+              <h3 className="mb-4 text-sm font-medium text-white/80">
                 👤 İletişim Kişileri ({contacts.length})
               </h3>
               <div className="space-y-3">
                 {contacts.map((contact) => (
-                  <div key={contact.id} className="rounded-lg border border-slate-700/50 bg-slate-700/20 p-3">
+                  <div key={contact.id} className="rounded-2xl border border-white/5 bg-white/[0.02] p-4">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="font-medium text-white">{contact.name}</p>
-                        {contact.role && <p className="text-xs text-slate-400">{contact.role}</p>}
+                        <p className="font-medium text-white/90">{contact.name}</p>
+                        {contact.role && <p className="text-xs text-white/50">{contact.role}</p>}
                         {contact.email && (
-                          <a href={`mailto:${contact.email}`} className="text-xs text-blue-400 hover:underline">
+                          <a href={`mailto:${contact.email}`} className="text-xs text-blue-400/90 hover:underline">
                             {contact.email}
                           </a>
                         )}
@@ -174,36 +186,36 @@ export default function ApplicationDetail({
 
           {/* Notlar */}
           {application.notes && (
-            <div className="mt-6">
-              <h3 className="mb-2 text-sm font-semibold text-slate-300">📝 Notlar</h3>
-              <p className="whitespace-pre-wrap rounded-lg bg-slate-700/30 p-3 text-sm text-slate-400">
+            <div className="mt-8 border-t border-white/10 pt-6">
+              <h3 className="mb-3 text-sm font-medium text-white/80">📝 Notlar</h3>
+              <p className="whitespace-pre-wrap rounded-2xl border border-white/5 bg-white/[0.02] p-4 text-sm text-white/60">
                 {application.notes}
               </p>
             </div>
           )}
 
           {/* Aksiyon Butonları */}
-          <div className="mt-6 flex gap-3">
+          <div className="mt-8 flex gap-3 border-t border-white/10 pt-6">
             <button
               onClick={() => onEdit(application)}
-              className="flex-1 rounded-lg bg-slate-700 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-600"
+              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
             >
-              ✏️ Düzenle
+              Düzenle
             </button>
 
             {!showDeleteConfirm ? (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="rounded-lg border border-red-500/30 px-4 py-2.5 text-sm text-red-400 transition-colors hover:bg-red-500/10"
+                className="rounded-xl border border-red-500/20 px-4 py-2.5 text-sm font-medium text-red-400/90 transition-colors hover:bg-red-500/10"
               >
-                🗑️ Sil
+                Sil
               </button>
             ) : (
               <div className="flex gap-2">
-                <button onClick={() => onDelete(application.id)} className="rounded-lg bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600">
+                <button onClick={() => onDelete(application.id)} className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600">
                   Evet, Sil
                 </button>
-                <button onClick={() => setShowDeleteConfirm(false)} className="rounded-lg border border-slate-600 px-3 py-2.5 text-sm text-slate-400 hover:bg-slate-700">
+                <button onClick={() => setShowDeleteConfirm(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-white/60 hover:bg-white/5 hover:text-white">
                   İptal
                 </button>
               </div>

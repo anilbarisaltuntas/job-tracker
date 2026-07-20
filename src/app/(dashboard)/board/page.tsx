@@ -22,13 +22,13 @@ export default async function BoardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-900">
+    <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 overflow-hidden p-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white">📋 Başvuru Takip Panosu</h2>
-          <p className="mt-1 text-sm text-slate-400">
-            Kartları sürükleyerek durumlarını güncelleyebilirsin
+      <main className="flex-1 overflow-y-auto p-6">
+        <div className="mb-8 pl-2">
+          <h2 className="text-2xl font-semibold tracking-tight text-white/90">Başvuru Takip Panosu</h2>
+          <p className="mt-1 text-sm text-white/40">
+            İş arayış sürecinizi sürükle-bırak yöntemiyle yönetin
           </p>
         </div>
         <KanbanBoard />

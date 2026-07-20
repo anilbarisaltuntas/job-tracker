@@ -77,6 +77,7 @@ export interface Application {
   source: ApplicationSource | null
   job_url: string | null
   notes: string | null
+  cv_file_url: string | null        // yeni: yüklenen PDF dosyasının adresi
   kanban_order: number
   created_at: string
   updated_at: string

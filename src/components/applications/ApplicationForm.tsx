@@ -76,6 +76,7 @@ export default function ApplicationForm({
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [cvFile, setCvFile] = useState<File | null>(null) // Seçilen PDF dosyası
 
   // Genel form değişiklik handler'ı
   const handleChange = (
@@ -120,13 +121,41 @@ export default function ApplicationForm({
     }
 
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("Oturum bulunamadı")
+
+      let finalCvUrl = editingApplication?.cv_file_url || null
+
+      // Eğer yeni bir PDF seçildiyse, Supabase Storage'a yükle
+      if (cvFile) {
+        const fileExt = cvFile.name.split('.').pop()
+        // Benzersiz dosya adı: kullanıcıID/zaman_damgası.pdf
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from('cv-files')
+          .upload(fileName, cvFile)
+
+        if (uploadError) throw uploadError
+
+        // Yüklenen dosyanın public (herkese açık) linkini al
+        const { data: { publicUrl } } = supabase.storage
+          .from('cv-files')
+          .getPublicUrl(fileName)
+
+        finalCvUrl = publicUrl
+      }
+
+      // Final veriye cv linkini ekle
+      const finalData = { ...cleanData, cv_file_url: finalCvUrl }
+
       let applicationId: string
 
       if (isEditing) {
         // Başvuruyu güncelle
         const { error } = await supabase
           .from('applications')
-          .update(cleanData)
+          .update(finalData)
           .eq('id', editingApplication!.id)
 
         if (error) throw error
@@ -140,10 +169,9 @@ export default function ApplicationForm({
 
       } else {
         // Yeni başvuru oluştur
-        const { data: { user } } = await supabase.auth.getUser()
         const { data, error } = await supabase
           .from('applications')
-          .insert({ ...cleanData, user_id: user!.id, kanban_order: 0 })
+          .insert({ ...finalData, user_id: user.id, kanban_order: 0 })
           .select('id')
           .single()
 
@@ -187,21 +215,21 @@ export default function ApplicationForm({
     }
   }
 
-  const inputClass = "w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-white placeholder-slate-400 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-  const labelClass = "mb-1 block text-xs font-medium text-slate-300"
+  const inputClass = "w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder-white/30 outline-none transition-all focus:border-white/20 focus:bg-white/10"
+  const labelClass = "mb-1.5 block text-xs font-medium text-white/60"
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-white/10 bg-[#0A0A0A] p-8 shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-slate-700 hover:text-white"
+          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full text-white/40 transition-colors hover:bg-white/10 hover:text-white"
         >
           ✕
         </button>
 
-        <h2 className="mb-6 text-xl font-bold text-white">
-          {isEditing ? '✏️ Başvuruyu Düzenle' : '➕ Yeni Başvuru'}
+        <h2 className="mb-8 text-xl font-semibold tracking-tight text-white/90">
+          {isEditing ? 'Başvuruyu Düzenle' : 'Yeni Başvuru'}
         </h2>
 
         {error && (
@@ -224,7 +252,7 @@ export default function ApplicationForm({
           </div>
 
           {/* Durum + CV */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className={labelClass}>Durum</label>
               <select name="status" value={formData.status} onChange={handleChange} className={inputClass}>
@@ -234,8 +262,20 @@ export default function ApplicationForm({
               </select>
             </div>
             <div>
-              <label className={labelClass}>CV Versiyonu</label>
+              <label className={labelClass}>CV Versiyonu (Metin)</label>
               <input name="cv_version" value={formData.cv_version} onChange={handleChange} placeholder="ör: BA v2" className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>CV Dosyası (PDF)</label>
+              <input 
+                type="file" 
+                accept=".pdf"
+                onChange={(e) => setCvFile(e.target.files?.[0] || null)}
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-1 file:text-xs file:font-medium file:text-white hover:file:bg-white/20"
+              />
+              {editingApplication?.cv_file_url && !cvFile && (
+                <p className="mt-1.5 text-xs text-blue-400">Mevcut CV yüklü</p>
+              )}
             </div>
           </div>
 
@@ -263,15 +303,15 @@ export default function ApplicationForm({
           {/* ============================== */}
           {/* İLETİŞİM KİŞİLERİ - YENİ */}
           {/* ============================== */}
-          <div className="rounded-lg border border-slate-700 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-slate-300">👤 İletişim Kişileri</h3>
+          <div className="mt-6 border-t border-white/10 pt-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-white/80">👤 İletişim Kişileri</h3>
               <button
                 type="button"
                 onClick={addContact}
-                className="flex items-center gap-1 rounded-lg bg-blue-500/20 px-3 py-1.5 text-xs font-medium text-blue-400 transition-colors hover:bg-blue-500/30"
+                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-white/60 hover:bg-white/5 hover:text-white/90"
               >
-                <span className="text-lg leading-none">+</span> Kişi Ekle
+                + Kişi Ekle
               </button>
             </div>
 
@@ -285,19 +325,17 @@ export default function ApplicationForm({
             ) : (
               <div className="space-y-4">
                 {contacts.map((contact, index) => (
-                  <div key={index} className="relative rounded-lg border border-slate-600/50 bg-slate-700/30 p-4">
-                    {/* Kişi sil butonu */}
-                    <button
-                      type="button"
-                      onClick={() => removeContact(index)}
-                      className="absolute right-2 top-2 rounded p-1 text-xs text-slate-500 hover:bg-slate-600 hover:text-red-400"
-                      title="Kişiyi kaldır"
-                    >
-                      ✕
-                    </button>
-
-                    {/* Kişi numarası */}
-                    <p className="mb-2 text-xs font-medium text-slate-500">Kişi {index + 1}</p>
+                  <div key={index} className="mt-4 rounded-2xl border border-white/5 bg-white/[0.02] p-5">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h4 className="text-xs font-medium text-white/40">Kişi #{index + 1}</h4>
+                      <button
+                        type="button"
+                        onClick={() => removeContact(index)}
+                        className="text-xs text-white/30 transition-colors hover:text-red-400"
+                      >
+                        Kaldır
+                      </button>
+                    </div>
 
                     {/* Kişi bilgileri */}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -393,12 +431,12 @@ export default function ApplicationForm({
           </div>
 
           {/* Butonlar */}
-          <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-slate-300 transition-colors hover:bg-slate-700">
+          <div className="mt-8 flex justify-end gap-3 border-t border-white/10 pt-6">
+            <button type="button" onClick={onClose} className="rounded-xl px-5 py-2.5 text-sm font-medium text-white/60 transition-colors hover:bg-white/5 hover:text-white/90">
               İptal
             </button>
-            <button type="submit" disabled={loading} className="rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-2 text-sm font-medium text-white transition-all hover:from-blue-600 hover:to-purple-700 disabled:opacity-50">
-              {loading ? 'Kaydediliyor...' : isEditing ? 'Güncelle' : 'Kaydet'}
+            <button type="submit" disabled={loading} className="rounded-xl bg-white px-6 py-2.5 text-sm font-medium text-black transition-all hover:bg-neutral-200 disabled:opacity-50">
+              {loading ? 'Kaydediliyor...' : isEditing ? 'Değişiklikleri Kaydet' : 'Başvuru Ekle'}
             </button>
           </div>
         </form>
