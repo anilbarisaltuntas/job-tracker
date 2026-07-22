@@ -101,7 +101,7 @@ export default function TableView({ applications, statuses, onCardClick, onBulkD
                   <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{app.position}</div>
                 </td>
                 <td className="cursor-pointer px-4 py-3" onClick={() => onCardClick(app)}>
-                  <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium" style={{ backgroundColor: column?.bgColor || 'var(--bg-surface)', color: column?.color || 'var(--text-primary)' }}>
+                  <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium" style={{ backgroundColor: column?.bg_color || 'var(--bg-surface)', color: column?.color || 'var(--text-primary)' }}>
                     {column?.emoji} {column?.title || 'Bilinmiyor'}
                   </span>
                 </td>
