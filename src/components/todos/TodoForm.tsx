@@ -28,7 +28,7 @@ export default function TodoForm({ editingTodo, preselectedApplicationId, onClos
   const isEditing = !!editingTodo
   const supabase = createClient()
   const [loading, setLoading] = useState(false)
-  const [applications, setApplications] = useState<Application[]>([])
+  const [applications, setApplications] = useState<Partial<Application>[]>([])
   
   const [formData, setFormData] = useState<TodoTaskFormData>({
     title: editingTodo?.title || '',
