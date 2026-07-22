@@ -12,7 +12,7 @@ import { NextResponse, type NextRequest } from 'next/server'
  * 2. Giriş yapmamış kullanıcıyı /login'e yönlendiriyoruz
  * 3. Giriş yapmış kullanıcıyı /login'den /board'a yönlendiriyoruz
  */
-export async function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })

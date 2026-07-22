@@ -11,12 +11,13 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Application, ApplicationStatus, ContactFormData } from '@/lib/types'
-import { KANBAN_COLUMNS, APPLICATION_SOURCES } from '@/lib/constants'
+import { Application, ApplicationStatus, ContactFormData, UserStatus } from '@/lib/types'
+import { APPLICATION_SOURCES } from '@/lib/constants'
 import RichTextEditor from '../ui/RichTextEditor'
 
 interface ApplicationFormProps {
   editingApplication: Application | null
+  statuses: UserStatus[]
   defaultStatus: ApplicationStatus
   onClose: () => void
   onSuccess: () => void
@@ -36,6 +37,7 @@ const emptyContact = (): ContactFormData => ({
 
 export default function ApplicationForm({
   editingApplication,
+  statuses,
   defaultStatus,
   onClose,
   onSuccess,
@@ -271,7 +273,7 @@ export default function ApplicationForm({
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Durum</label>
               <select name="status" value={formData.status} onChange={handleChange} className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}>
-                {KANBAN_COLUMNS.map(col => (
+                {statuses.map(col => (
                   <option key={col.id} value={col.id}>{col.emoji} {col.title}</option>
                 ))}
               </select>
@@ -503,6 +505,7 @@ export default function ApplicationForm({
             >
               İptal
             </button>
+
             <button
               type="submit"
               disabled={loading}

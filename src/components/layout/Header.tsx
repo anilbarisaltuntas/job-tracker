@@ -72,6 +72,16 @@ export default function Header() {
               📋 Pano
             </Link>
             <Link 
+              href="/todos"
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-all ${
+                pathname === '/todos' 
+                  ? 'bg-blue-500 text-white shadow-md' 
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-500/10'
+              }`}
+            >
+              ✅ Görevler
+            </Link>
+            <Link 
               href="/saved"
               className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-all ${
                 pathname === '/saved' 
@@ -80,6 +90,16 @@ export default function Header() {
               }`}
             >
               ⭐ Kaydedilenler
+            </Link>
+            <Link 
+              href="/settings"
+              className={`rounded-lg px-4 py-1.5 text-sm font-semibold transition-all ${
+                pathname === '/settings' 
+                  ? 'bg-blue-500 text-white shadow-md' 
+                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-500/10'
+              }`}
+            >
+              ⚙️ Sütun Ayarları
             </Link>
           </nav>
         </div>

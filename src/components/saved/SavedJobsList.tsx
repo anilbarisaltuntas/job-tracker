@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { SavedJob, ApplicationStatus } from '@/lib/types'
 import { formatDistanceToNow } from 'date-fns'
 import { tr } from 'date-fns/locale'
+import MoveToBoardModal from '@/components/saved/MoveToBoardModal'
 
 export default function SavedJobsList() {
   const [jobs, setJobs] = useState<SavedJob[]>([])
@@ -18,6 +19,9 @@ export default function SavedJobsList() {
   const [postedDate, setPostedDate] = useState('')
   const [jobUrl, setJobUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Checklist -> Modal states
+  const [jobToMove, setJobToMove] = useState<SavedJob | null>(null)
 
   const fetchJobs = async () => {
     setLoading(true)
@@ -72,8 +76,24 @@ export default function SavedJobsList() {
     setJobs(jobs.filter(j => j.id !== id))
   }
 
-  const handleMoveToApplied = async (job: SavedJob) => {
-    if (!confirm('Bu ilanı başvuruldu olarak Kanban panosuna taşımak istiyor musun?')) return
+  const handleChecklistChange = async (job: SavedJob, field: 'is_cv_updated' | 'is_message_drafted' | 'is_applied', value: boolean) => {
+    // Optimistic Update
+    const updatedJob = { ...job, [field]: value }
+    setJobs(jobs.map(j => j.id === job.id ? updatedJob : j))
+
+    await supabase
+      .from('saved_jobs')
+      .update({ [field]: value })
+      .eq('id', job.id)
+
+    // Check if all 3 are now true
+    if (updatedJob.is_cv_updated && updatedJob.is_message_drafted && updatedJob.is_applied) {
+      setJobToMove(updatedJob)
+    }
+  }
+
+  const handleConfirmMove = async (statusId: string) => {
+    if (!jobToMove) return
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -81,10 +101,10 @@ export default function SavedJobsList() {
     // 1. Add to applications
     const newApp = {
       user_id: user.id,
-      company_name: job.company_name,
-      position: job.position,
-      job_url: job.job_url,
-      status: 'applied_message_pending' as ApplicationStatus,
+      company_name: jobToMove.company_name,
+      position: jobToMove.position,
+      job_url: jobToMove.job_url,
+      status: statusId,
       application_date: new Date().toISOString(),
       kanban_order: 0,
       source: 'other' as any
@@ -94,9 +114,9 @@ export default function SavedJobsList() {
     
     // 2. Delete from saved jobs
     if (!appError) {
-      await supabase.from('saved_jobs').delete().eq('id', job.id)
-      setJobs(jobs.filter(j => j.id !== job.id))
-      alert('Başarıyla Kanban panosuna taşındı!')
+      await supabase.from('saved_jobs').delete().eq('id', jobToMove.id)
+      setJobs(jobs.filter(j => j.id !== jobToMove.id))
+      setJobToMove(null)
     }
   }
 
@@ -150,6 +170,47 @@ export default function SavedJobsList() {
                 </div>
               </div>
 
+              <div className="mt-4 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
+                <h4 className="mb-2 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Hazırlık Aşamaları</h4>
+                <div className="space-y-2 text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={job.is_cv_updated || false}
+                      onChange={(e) => handleChecklistChange(job, 'is_cv_updated', e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span style={{ color: job.is_cv_updated ? 'var(--text-tertiary)' : 'var(--text-primary)' }} className={job.is_cv_updated ? 'line-through' : ''}>
+                      CV ilana göre güncellendi
+                    </span>
+                  </label>
+                  
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={job.is_message_drafted || false}
+                      onChange={(e) => handleChecklistChange(job, 'is_message_drafted', e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span style={{ color: job.is_message_drafted ? 'var(--text-tertiary)' : 'var(--text-primary)' }} className={job.is_message_drafted ? 'line-through' : ''}>
+                      Mesaj / E-Mail taslağı oluşturuldu
+                    </span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={job.is_applied || false}
+                      onChange={(e) => handleChecklistChange(job, 'is_applied', e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span style={{ color: job.is_applied ? 'var(--text-tertiary)' : 'var(--text-primary)' }} className={job.is_applied ? 'line-through' : ''}>
+                      Başvuruldu
+                    </span>
+                  </label>
+                </div>
+              </div>
+
               <div className="mt-6 flex items-center justify-between border-t pt-4" style={{ borderColor: 'var(--border)' }}>
                 <button
                   onClick={() => handleDelete(job.id)}
@@ -158,10 +219,10 @@ export default function SavedJobsList() {
                   Sil
                 </button>
                 <button
-                  onClick={() => handleMoveToApplied(job)}
+                  onClick={() => setJobToMove(job)}
                   className="rounded-lg bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-500 transition-colors hover:bg-blue-500 hover:text-white"
                 >
-                  Başvurulara Taşı →
+                  Panoya Taşı →
                 </button>
               </div>
             </div>
@@ -200,6 +261,14 @@ export default function SavedJobsList() {
             </form>
           </div>
         </div>
+      )}
+
+      {jobToMove && (
+        <MoveToBoardModal
+          job={jobToMove}
+          onClose={() => setJobToMove(null)}
+          onConfirm={handleConfirmMove}
+        />
       )}
     </div>
   )

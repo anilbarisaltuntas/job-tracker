@@ -8,13 +8,14 @@
  * - Her kişi için mesaj/mail durumunu gösterir
  */
 
-import { Application, ApplicationHistory } from '@/lib/types'
-import { KANBAN_COLUMNS } from '@/lib/constants'
+import { Application, ApplicationHistory, UserStatus, TodoTask } from '@/lib/types'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import TodoForm from '@/components/todos/TodoForm'
 
 interface ApplicationDetailProps {
   application: Application
+  statuses: UserStatus[]
   onClose: () => void
   onEdit: (app: Application) => void
   onDelete: (appId: string) => void
@@ -22,14 +23,17 @@ interface ApplicationDetailProps {
 
 export default function ApplicationDetail({
   application,
+  statuses,
   onClose,
   onEdit,
   onDelete,
 }: ApplicationDetailProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [history, setHistory] = useState<ApplicationHistory[]>([])
+  const [tasks, setTasks] = useState<TodoTask[]>([])
+  const [isTodoFormOpen, setIsTodoFormOpen] = useState(false)
   
-  const column = KANBAN_COLUMNS.find(col => col.id === application.status)
+  const column = statuses.find(col => col.id === application.status)
   const supabase = createClient()
 
   useEffect(() => {
@@ -43,9 +47,33 @@ export default function ApplicationDetail({
       if (data) {
         setHistory(data)
       }
+
+      const { data: tasksData } = await supabase
+        .from('todo_tasks')
+        .select('*')
+        .eq('application_id', application.id)
+        .order('due_date', { ascending: true, nullsFirst: false })
+      
+      if (tasksData) {
+        setTasks(tasksData)
+      }
     }
     fetchHistory()
-  }, [application.id, supabase])
+  }, [application.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleToggleTaskStatus = async (task: TodoTask) => {
+    const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+    // Optimistic update
+    setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus } : t))
+    
+    await supabase
+      .from('todo_tasks')
+      .update({ status: newStatus })
+      .eq('id', task.id)
+  }
+
+  const pendingTasks = tasks.filter(t => t.status !== 'completed')
+  const completedTasks = tasks.filter(t => t.status === 'completed')
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '—'
@@ -251,6 +279,74 @@ export default function ApplicationDetail({
             </div>
           )}
 
+          {/* Görevler (To-Do) */}
+          <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>✅ Görevler</h3>
+              <button 
+                onClick={() => setIsTodoFormOpen(true)}
+                className="text-xs font-medium text-blue-500 hover:underline"
+              >
+                + Görev Ekle
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              
+              {/* Yapılacaklar */}
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Yapılacaklar</h4>
+                {pendingTasks.length === 0 ? (
+                  <p className="text-xs italic text-slate-400">Henüz yapılacak görev yok.</p>
+                ) : (
+                  pendingTasks.map(task => (
+                    <div key={task.id} className="flex items-center justify-between rounded-xl p-3 border transition-colors hover:shadow-sm" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => handleToggleTaskStatus(task)}
+                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-slate-300 transition-colors hover:border-blue-400"
+                        />
+                        <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {task.title}
+                        </span>
+                      </div>
+                      {task.due_date && (
+                        <span className="text-[10px] font-medium opacity-70" style={{ color: 'var(--text-tertiary)' }}>
+                          {new Date(task.due_date).toLocaleDateString('tr-TR')}
+                        </span>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Tamamlananlar */}
+              <div className="space-y-2 mt-4">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tamamlananlar</h4>
+                {completedTasks.length === 0 ? (
+                  <p className="text-xs italic text-slate-400">Henüz tamamlanan görev yok.</p>
+                ) : (
+                  completedTasks.map(task => (
+                    <div key={task.id} className="flex items-center justify-between rounded-xl p-3 border opacity-60 grayscale" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => handleToggleTaskStatus(task)}
+                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-blue-500 bg-blue-500 text-white transition-colors"
+                        >
+                          ✓
+                        </button>
+                        <span className="text-xs font-medium line-through" style={{ color: 'var(--text-primary)' }}>
+                          {task.title}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+            </div>
+          </div>
+
           {/* Geçmiş / Timeline */}
           <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
             <h3 className="mb-4 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>⏳ Serüven (Geçmiş)</h3>
@@ -270,10 +366,12 @@ export default function ApplicationDetail({
                       <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{item.description}</p>
                       
                       {(item.old_status || item.new_status) && item.event_type === 'STATUS_CHANGED' && (
-                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px] font-medium text-slate-500">
-                          {item.old_status && <span>{KANBAN_COLUMNS.find(c => c.id === item.old_status)?.title || item.old_status}</span>}
-                          {item.old_status && item.new_status && <span>→</span>}
-                          {item.new_status && <span className="text-blue-500">{KANBAN_COLUMNS.find(c => c.id === item.new_status)?.title || item.new_status}</span>}
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px]">
+                          <p className="text-sm">
+                            {item.old_status && <span>{statuses.find(c => c.id === item.old_status)?.title || item.old_status}</span>}
+                            {item.old_status && <span className="mx-2 text-slate-500">→</span>}
+                            {item.new_status && <span className="text-blue-500">{statuses.find(c => c.id === item.new_status)?.title || item.new_status}</span>}
+                          </p>
                         </div>
                       )}
 
@@ -328,6 +426,26 @@ export default function ApplicationDetail({
           </div>
         </div>
       </div>
+
+      {isTodoFormOpen && (
+        <TodoForm
+          editingTodo={null}
+          preselectedApplicationId={application.id}
+          onClose={() => setIsTodoFormOpen(false)}
+          onSave={() => {
+            setIsTodoFormOpen(false)
+            // Trigger fetch again
+            supabase
+              .from('todo_tasks')
+              .select('*')
+              .eq('application_id', application.id)
+              .order('due_date', { ascending: true, nullsFirst: false })
+              .then(({ data }) => {
+                if (data) setTasks(data)
+              })
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -10,15 +10,7 @@
  */
 
 /** Kanban board'daki durum değerleri */
-export type ApplicationStatus =
-  | 'applied_message_pending'      // Başvuruldu - Mesaj Atılacak
-  | 'applied_message_sent'         // Başvuruldu - Mesaj Atıldı
-  | 'applied_no_reply_email_pending' // Mesaja Dönüş Gelmedi - Mail Atılacak
-  | 'email_sent_waiting'           // Mail Atıldı - Dönüş Bekleniyor
-  | 'reply_received'              // Mesaj Dönüşü Geldi
-  | 'interview_done_waiting'       // Mülakat Yapıldı - Dönüş Bekleniyor
-  | 'rejected'                     // Reddedildi
-  | 'offer_received'              // Teklif Alındı
+export type ApplicationStatus = string
 
 /** Başvuru kaynağı */
 export type ApplicationSource =
@@ -124,5 +116,44 @@ export interface SavedJob {
   position: string
   posted_date: string | null
   job_url: string | null
+  is_cv_updated: boolean
+  is_message_drafted: boolean
+  is_applied: boolean
   created_at: string
 }
+
+/** Kullanıcıya Özel Kanban Statüsü */
+export interface UserStatus {
+  id: string
+  user_id: string
+  title: string
+  emoji: string
+  color: string
+  bg_color: string
+  order_index: number
+  created_at?: string
+}
+
+/** Görev Yöneticisi (To-Do List) için Görev Tipi */
+export type TodoStatus = 'pending' | 'in_progress' | 'completed'
+export type TodoPriority = 'low' | 'medium' | 'high'
+export type TodoCategory = 'general' | 'interview' | 'cv' | 'networking'
+
+export interface TodoTask {
+  id: string
+  user_id: string
+  application_id: string | null
+  title: string
+  description: string | null
+  status: TodoStatus
+  priority: TodoPriority
+  category: TodoCategory
+  due_date: string | null
+  created_at: string
+  updated_at: string
+  
+  // JOIN ile gelecek olan application detayı
+  application?: Application
+}
+
+export type TodoTaskFormData = Omit<TodoTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'application'>

@@ -10,7 +10,6 @@
  */
 
 import { Application } from '@/lib/types'
-import { KANBAN_COLUMNS } from '@/lib/constants'
 
 interface ApplicationCardProps {
   application: Application
@@ -18,7 +17,6 @@ interface ApplicationCardProps {
 }
 
 export default function ApplicationCard({ application, onClick }: ApplicationCardProps) {
-  const column = KANBAN_COLUMNS.find(col => col.id === application.status)
 
   const isOverdue = application.follow_up_date 
     && new Date(application.follow_up_date) < new Date()
@@ -38,7 +36,7 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
       style={{
         backgroundColor: 'var(--bg-surface)',
         border: '1px solid var(--border)',
-        boxShadow: 'none',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.borderColor = 'var(--border-hover)'
@@ -51,11 +49,7 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
         e.currentTarget.style.boxShadow = 'none'
       }}
     >
-      {/* Üst renkli çizgi */}
-      <div
-        className="mb-2 h-[3px] w-8 rounded-full opacity-80"
-        style={{ backgroundColor: column?.color || '#64748B' }}
-      />
+
 
       {/* Şirket adı */}
       <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>

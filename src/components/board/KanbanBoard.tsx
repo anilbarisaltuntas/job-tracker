@@ -20,11 +20,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd'
 import { createClient } from '@/lib/supabase/client'
 import { Application, ApplicationStatus } from '@/lib/types'
-import { KANBAN_COLUMNS } from '@/lib/constants'
 import KanbanColumn from './KanbanColumn'
 import ApplicationForm from '../applications/ApplicationForm'
 import ApplicationDetail from '../applications/ApplicationDetail'
 import TableView from './TableView'
+import { useStatuses } from '@/hooks/useStatuses'
 
 export default function KanbanBoard() {
   // ===== STATE (Durum Değişkenleri) =====
@@ -35,6 +35,8 @@ export default function KanbanBoard() {
   const [selectedApp, setSelectedApp] = useState<Application | null>(null)  // Detay görüntüleme
   const [editingApp, setEditingApp] = useState<Application | null>(null)    // Düzenleme
   const [defaultStatus, setDefaultStatus] = useState<ApplicationStatus>('applied_message_pending')
+
+  const { statuses, loading: statusesLoading } = useStatuses()
 
   // Filtreleme State'leri
   const [searchQuery, setSearchQuery] = useState('')
@@ -203,8 +205,8 @@ export default function KanbanBoard() {
     return matchesSearch && matchesOverdue
   })
 
-  // ===== RENDER =====
-  if (loading) {
+// ===== RENDER =====
+  if (loading || statusesLoading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="flex items-center gap-3" style={{ color: 'var(--text-tertiary)' }}>
@@ -212,7 +214,7 @@ export default function KanbanBoard() {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          Başvurular yükleniyor...
+          Panonuz hazırlanıyor...
         </div>
       </div>
     )
@@ -285,7 +287,7 @@ export default function KanbanBoard() {
       {viewMode === 'kanban' ? (
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 gap-6 pb-8 sm:grid-cols-2 xl:grid-cols-4">
-            {KANBAN_COLUMNS.map(column => {
+            {statuses.map(column => {
               // Bu sütuna ait başvuruları filtrele
               const columnApps = filteredApplications
                 .filter(app => app.status === column.id)
@@ -297,8 +299,6 @@ export default function KanbanBoard() {
                   columnId={column.id}
                   title={column.title}
                   emoji={column.emoji}
-                  color={column.color}
-                  bgColor={column.bgColor}
                   applications={columnApps}
                   onCardClick={handleCardClick}
                   onAddClick={() => handleAddClick(column.id)}
@@ -311,6 +311,7 @@ export default function KanbanBoard() {
         <div className="pb-8">
           <TableView
             applications={filteredApplications}
+            statuses={statuses}
             onCardClick={handleCardClick}
             onBulkDelete={handleBulkDelete}
             onBulkStatusUpdate={handleBulkStatusUpdate}
@@ -322,19 +323,24 @@ export default function KanbanBoard() {
       {isFormOpen && (
         <ApplicationForm
           editingApplication={editingApp}
+          statuses={statuses}
           defaultStatus={defaultStatus}
-          onClose={() => { setIsFormOpen(false); setEditingApp(null) }}
+          onClose={() => {
+            setIsFormOpen(false)
+            setEditingApp(null)
+          }}
           onSuccess={handleFormSuccess}
         />
       )}
 
-      {/* Başvuru Detay Modal */}
+      {/* Detay Modal */}
       {selectedApp && (
         <ApplicationDetail
           application={selectedApp}
+          statuses={statuses}
           onClose={() => setSelectedApp(null)}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onEdit={() => handleEdit(selectedApp)}
+          onDelete={() => handleDelete(selectedApp.id)}
         />
       )}
     </>

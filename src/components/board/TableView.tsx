@@ -1,17 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Application, ApplicationStatus } from '@/lib/types'
-import { KANBAN_COLUMNS } from '@/lib/constants'
+import { Application, ApplicationStatus, UserStatus } from '@/lib/types'
 
 interface TableViewProps {
   applications: Application[]
+  statuses: UserStatus[]
   onCardClick: (app: Application) => void
   onBulkDelete: (ids: string[]) => void
   onBulkStatusUpdate: (ids: string[], newStatus: ApplicationStatus) => void
 }
 
-export default function TableView({ applications, onCardClick, onBulkDelete, onBulkStatusUpdate }: TableViewProps) {
+export default function TableView({ applications, statuses, onCardClick, onBulkDelete, onBulkStatusUpdate }: TableViewProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkStatus, setBulkStatus] = useState<ApplicationStatus | ''>('')
   
@@ -79,7 +79,7 @@ export default function TableView({ applications, onCardClick, onBulkDelete, onB
         </thead>
         <tbody>
           {applications.map(app => {
-            const column = KANBAN_COLUMNS.find(c => c.id === app.status)
+            const column = statuses.find(c => c.id === app.status)
             const isOverdue = app.follow_up_date && new Date(app.follow_up_date) < new Date()
             
             return (
@@ -160,8 +160,10 @@ export default function TableView({ applications, onCardClick, onBulkDelete, onB
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}
             >
               <option value="">Durumu Değiştir...</option>
-              {KANBAN_COLUMNS.map(col => (
-                <option key={col.id} value={col.id}>{col.emoji} {col.title}</option>
+              {statuses.map(col => (
+                <option key={col.id} value={col.id}>
+                  {col.emoji} {col.title}
+                </option>
               ))}
             </select>
             
