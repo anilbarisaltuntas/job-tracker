@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { SavedJob, ApplicationStatus } from '@/lib/types'
+import { SavedJob, ApplicationStatus, MatchLevel, PriorityLevel } from '@/lib/types'
 import { formatDistanceToNow } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import MoveToBoardModal from '@/components/saved/MoveToBoardModal'
@@ -18,7 +18,11 @@ export default function SavedJobsList() {
   const [position, setPosition] = useState('')
   const [postedDate, setPostedDate] = useState('')
   const [jobUrl, setJobUrl] = useState('')
+  const [matchLevel, setMatchLevel] = useState<MatchLevel>('medium')
+  const [priorityLevel, setPriorityLevel] = useState<PriorityLevel>('medium')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isParsing, setIsParsing] = useState(false)
+  const [editingJob, setEditingJob] = useState<SavedJob | null>(null)
 
   // Checklist -> Modal states
   const [jobToMove, setJobToMove] = useState<SavedJob | null>(null)
@@ -54,20 +58,80 @@ export default function SavedJobsList() {
       company_name: companyName,
       position,
       job_url: jobUrl || null,
-      posted_date: postedDate ? new Date(postedDate).toISOString() : null
+      posted_date: postedDate ? new Date(postedDate).toISOString() : null,
+      match_level: matchLevel,
+      priority_level: priorityLevel
     }
 
-    const { error } = await supabase.from('saved_jobs').insert(newJob)
-    
-    if (!error) {
-      setIsFormOpen(false)
-      setCompanyName('')
-      setPosition('')
-      setPostedDate('')
-      setJobUrl('')
-      fetchJobs()
+    if (editingJob) {
+      const { error } = await supabase.from('saved_jobs').update(newJob).eq('id', editingJob.id)
+      if (!error) resetForm()
+    } else {
+      const { error } = await supabase.from('saved_jobs').insert(newJob)
+      if (!error) resetForm()
     }
+    
     setIsSubmitting(false)
+  }
+
+  const resetForm = () => {
+    setIsFormOpen(false)
+    setEditingJob(null)
+    setCompanyName('')
+    setPosition('')
+    setPostedDate('')
+    setJobUrl('')
+    setMatchLevel('medium')
+    setPriorityLevel('medium')
+    fetchJobs()
+  }
+
+  const openNewForm = () => {
+    setEditingJob(null)
+    setCompanyName('')
+    setPosition('')
+    setPostedDate('')
+    setJobUrl('')
+    setMatchLevel('medium')
+    setPriorityLevel('medium')
+    setIsFormOpen(true)
+  }
+
+  const openEditForm = (job: SavedJob) => {
+    setEditingJob(job)
+    setCompanyName(job.company_name)
+    setPosition(job.position)
+    setPostedDate(job.posted_date ? job.posted_date.split('T')[0] : '')
+    setJobUrl(job.job_url || '')
+    setMatchLevel(job.match_level)
+    setPriorityLevel(job.priority_level)
+    setIsFormOpen(true)
+  }
+
+  const handleAutoFill = async () => {
+    if (!jobUrl) {
+      alert('Lütfen önce ilan linkini girin!')
+      return
+    }
+
+    try {
+      setIsParsing(true)
+      const res = await fetch(`/api/parse-job?url=${encodeURIComponent(jobUrl)}`)
+      const result = await res.json()
+
+      if (res.ok && result.success) {
+        if (result.data.company_name) setCompanyName(result.data.company_name)
+        if (result.data.position) setPosition(result.data.position)
+        if (result.data.posted_date) setPostedDate(result.data.posted_date)
+      } else {
+        alert(result.error || 'Bilgiler çekilemedi. Manuel girebilirsiniz.')
+      }
+    } catch (error) {
+      console.error(error)
+      alert('Bağlantı hatası oluştu.')
+    } finally {
+      setIsParsing(false)
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -104,6 +168,8 @@ export default function SavedJobsList() {
       company_name: jobToMove.company_name,
       position: jobToMove.position,
       job_url: jobToMove.job_url,
+      match_level: jobToMove.match_level,
+      priority_level: jobToMove.priority_level,
       status: statusId,
       application_date: new Date().toISOString(),
       kanban_order: 0,
@@ -121,14 +187,14 @@ export default function SavedJobsList() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-8">
+    <div className="mx-auto max-w-[1600px] w-full px-6 py-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Kaydedilen İlanlar</h1>
           <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>Daha sonra başvurmak üzere ayırdığın ilanlar.</p>
         </div>
         <button
-          onClick={() => setIsFormOpen(true)}
+          onClick={openNewForm}
           className="whitespace-nowrap rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-600"
         >
           Yeni İlan Kaydet
@@ -145,13 +211,31 @@ export default function SavedJobsList() {
           <p className="mt-1 text-sm" style={{ color: 'var(--text-tertiary)' }}>Gözüne kestirdiğin bir ilan olduğunda buraya ekleyebilirsin.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {jobs.map(job => (
             <div key={job.id} className="group relative flex flex-col justify-between rounded-2xl border p-5 shadow-sm transition-shadow hover:shadow-md" style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border)' }}>
               <div>
                 <h3 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>{job.position}</h3>
                 <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{job.company_name}</p>
                 
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                    job.match_level === 'high' ? 'bg-green-50 text-green-700 ring-green-600/20' :
+                    job.match_level === 'medium' ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20' :
+                    'bg-red-50 text-red-700 ring-red-600/10'
+                  }`}>
+                    {job.match_level === 'high' ? '🟢 Yüksek Uyumluluk' : job.match_level === 'medium' ? '🟡 Orta Uyumluluk' : '🔴 Düşük Uyumluluk'}
+                  </span>
+                  
+                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                    job.priority_level === 'high' ? 'bg-purple-50 text-purple-700 ring-purple-600/20' :
+                    job.priority_level === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+                    'bg-gray-50 text-gray-600 ring-gray-500/10'
+                  }`}>
+                    {job.priority_level === 'high' ? '🔥 Yüksek İstek' : job.priority_level === 'medium' ? '⚡ Orta İstek' : '🧊 Düşük İstek'}
+                  </span>
+                </div>
+
                 <div className="mt-4 space-y-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
                   {job.posted_date && (
                     <div className="flex items-center gap-2">
@@ -212,12 +296,20 @@ export default function SavedJobsList() {
               </div>
 
               <div className="mt-6 flex items-center justify-between border-t pt-4" style={{ borderColor: 'var(--border)' }}>
-                <button
-                  onClick={() => handleDelete(job.id)}
-                  className="text-xs font-medium text-red-500 hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  Sil
-                </button>
+                <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => openEditForm(job)}
+                    className="text-xs font-medium text-blue-500 hover:underline"
+                  >
+                    Düzenle
+                  </button>
+                  <button
+                    onClick={() => handleDelete(job.id)}
+                    className="text-xs font-medium text-red-500 hover:underline"
+                  >
+                    Sil
+                  </button>
+                </div>
                 <button
                   onClick={() => setJobToMove(job)}
                   className="rounded-lg bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-500 transition-colors hover:bg-blue-500 hover:text-white"
@@ -233,7 +325,9 @@ export default function SavedJobsList() {
       {isFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl p-6 shadow-2xl" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
-            <h2 className="mb-4 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>İlan Kaydet</h2>
+            <h2 className="mb-4 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+              {editingJob ? 'İlanı Düzenle' : 'İlan Kaydet'}
+            </h2>
             <form onSubmit={handleAddSubmit} className="space-y-4 text-sm">
               <div>
                 <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>Şirket Adı *</label>
@@ -249,7 +343,36 @@ export default function SavedJobsList() {
               </div>
               <div>
                 <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>İlan Linki</label>
-                <input type="url" value={jobUrl} onChange={e => setJobUrl(e.target.value)} className="w-full rounded-xl border p-2.5 outline-none" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} placeholder="https://..." />
+                <div className="flex gap-2">
+                  <input type="url" value={jobUrl} onChange={e => setJobUrl(e.target.value)} className="w-full rounded-xl border p-2.5 outline-none" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} placeholder="https://..." />
+                  <button 
+                    type="button" 
+                    onClick={handleAutoFill}
+                    disabled={isParsing || !jobUrl}
+                    className="shrink-0 rounded-xl bg-blue-500/10 px-4 font-medium text-blue-500 transition-colors hover:bg-blue-500 hover:text-white disabled:opacity-50"
+                  >
+                    {isParsing ? '⏳ Bekleyin...' : '✨ Bilgileri Çek'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>İlana Uyumluluğum</label>
+                  <select value={matchLevel} onChange={e => setMatchLevel(e.target.value as MatchLevel)} className="w-full rounded-xl border p-2.5 outline-none" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
+                    <option value="low">🔴 Düşük</option>
+                    <option value="medium">🟡 Orta</option>
+                    <option value="high">🟢 Yüksek</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>İsteğim / Önceliğim</label>
+                  <select value={priorityLevel} onChange={e => setPriorityLevel(e.target.value as PriorityLevel)} className="w-full rounded-xl border p-2.5 outline-none" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
+                    <option value="low">🧊 Düşük</option>
+                    <option value="medium">⚡ Orta</option>
+                    <option value="high">🔥 Yüksek</option>
+                  </select>
+                </div>
               </div>
 
               <div className="mt-6 flex justify-end gap-3 border-t pt-4" style={{ borderColor: 'var(--border)' }}>

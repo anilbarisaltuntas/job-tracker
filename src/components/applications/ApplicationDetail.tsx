@@ -177,6 +177,25 @@ export default function ApplicationDetail({
               </div>
             )}
 
+            {/* Metrikler */}
+            <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
+              <span>🎯</span>
+              <div className="flex w-full items-center gap-4">
+                <div>
+                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Uyumluluk</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {application.match_level === 'high' ? '🟢 Yüksek' : application.match_level === 'medium' ? '🟡 Orta' : '🔴 Düşük'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Öncelik</p>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                    {application.priority_level === 'high' ? '🔥 Yüksek' : application.priority_level === 'medium' ? '⚡ Orta' : '🧊 Düşük'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Takip tarihi */}
             {application.follow_up_date && (
               <div

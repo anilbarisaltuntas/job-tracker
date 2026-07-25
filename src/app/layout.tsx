@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JobTracker | Kariyer Takip Asistanı",
+  title: "Application Route | Kariyer Takip Asistanı",
   description: "İş başvurularınızı profesyonelce yönetin ve takip edin.",
 };
 

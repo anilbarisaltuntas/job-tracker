@@ -17,18 +17,6 @@ interface ApplicationCardProps {
 }
 
 export default function ApplicationCard({ application, onClick }: ApplicationCardProps) {
-
-  const isOverdue = application.follow_up_date 
-    && new Date(application.follow_up_date) < new Date()
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
-
   return (
     <div
       onClick={onClick}
@@ -61,56 +49,27 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
         {application.position}
       </p>
 
-      {/* Alt bilgiler */}
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
-        <span
-          className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs"
-          style={{
-            backgroundColor: 'var(--badge-bg)',
-            border: '1px solid var(--border)',
-            color: 'var(--text-secondary)',
-          }}
-        >
-          📅 {formatDate(application.application_date)}
-        </span>
-
-        {application.source && (
-          <span
-            className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs"
-            style={{
-              backgroundColor: 'var(--badge-bg)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-secondary)',
-            }}
-          >
-            🔗 {application.source}
+      {/* Metrik Rozetleri (Uyumluluk & Öncelik) */}
+      <div className="mt-2.5 flex flex-wrap gap-1.5">
+        {application.match_level && (
+          <span className={`inline-flex items-center rounded text-[10px] font-medium px-1.5 py-0.5 ring-1 ring-inset ${
+            application.match_level === 'high' ? 'bg-green-50 text-green-700 ring-green-600/20' :
+            application.match_level === 'medium' ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20' :
+            'bg-red-50 text-red-700 ring-red-600/10'
+          }`}>
+            {application.match_level === 'high' ? '🟢 Yüksek' : application.match_level === 'medium' ? '🟡 Orta' : '🔴 Düşük'} Uyumluluk
           </span>
         )}
-
-        {(application.cv_version || application.cv_file_url) && (
-          <span className="inline-flex items-center gap-1 rounded-md border border-blue-500/10 bg-blue-500/5 px-2 py-0.5 text-xs text-blue-500">
-            {application.cv_file_url ? '📎' : '📄'} {application.cv_version || 'CV'}
+        {application.priority_level && (
+          <span className={`inline-flex items-center rounded text-[10px] font-medium px-1.5 py-0.5 ring-1 ring-inset ${
+            application.priority_level === 'high' ? 'bg-purple-50 text-purple-700 ring-purple-600/20' :
+            application.priority_level === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
+            'bg-gray-50 text-gray-600 ring-gray-500/10'
+          }`}>
+            {application.priority_level === 'high' ? '🔥 Yüksek' : application.priority_level === 'medium' ? '⚡ Orta' : '🧊 Düşük'} İstek
           </span>
         )}
       </div>
-
-      {/* Takip tarihi uyarısı */}
-      {application.follow_up_date && (
-        <div className={`mt-2.5 flex items-center gap-1 text-[11px] ${
-          isOverdue ? 'text-red-500' : ''
-        }`} style={isOverdue ? {} : { color: 'var(--text-tertiary)' }}>
-          {isOverdue ? '⚠️' : '🔔'} Takip: {formatDate(application.follow_up_date)}
-          {isOverdue && <span className="ml-1 rounded border border-red-500/20 bg-red-500/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-red-500">Gecikti!</span>}
-        </div>
-      )}
-
-      {/* İletişim kişisi (varsa) */}
-      {application.contact_name && (
-        <div className="mt-2 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-          👤 {application.contact_name}
-          {application.contact_role && ` — ${application.contact_role}`}
-        </div>
-      )}
     </div>
   )
 }

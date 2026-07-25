@@ -79,77 +79,89 @@ export default function TodosPage() {
 
     return (
       <div 
-        className={`group flex items-start gap-4 rounded-xl border p-4 transition-all hover:shadow-md ${
-          isCompleted ? 'opacity-60 grayscale' : ''
+        className={`group flex items-start gap-3 rounded-xl transition-all ${
+          isCompleted 
+            ? 'py-2 px-1' 
+            : 'border p-3 hover:shadow-md'
         }`}
-        style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}
+        style={!isCompleted ? { backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' } : undefined}
       >
         {/* Checkbox */}
         <button 
           onClick={() => handleToggleStatus(task)}
-          className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+          className={`mt-0.5 flex shrink-0 items-center justify-center rounded transition-colors ${
             isCompleted 
-              ? 'border-blue-500 bg-blue-500 text-white' 
-              : 'border-slate-300 hover:border-blue-400'
+              ? 'h-5 w-5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' 
+              : 'h-5 w-5 border-2 border-slate-300 hover:border-emerald-400'
           }`}
         >
-          {isCompleted && '✓'}
+          {isCompleted && <span className="text-[12px]">✓</span>}
         </button>
 
         {/* İçerik */}
-        <div className="flex-1">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <h3 className={`text-base font-semibold ${isCompleted ? 'line-through text-slate-400' : ''}`} style={{ color: isCompleted ? undefined : 'var(--text-primary)' }}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className={`text-sm break-words ${isCompleted ? 'line-through text-slate-400 font-medium' : 'font-semibold'}`} style={{ color: isCompleted ? undefined : 'var(--text-primary)' }}>
               {task.title}
             </h3>
             
-            <div className="flex items-center gap-2 text-xs font-medium">
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                {CATEGORY_LABELS[task.category]}
-              </span>
-              <span className={`rounded-full px-2.5 py-1 ${PRIORITY_STYLES[task.priority].color}`}>
-                {PRIORITY_STYLES[task.priority].label} Öncelik
-              </span>
-            </div>
+            {/* Etiketler (Sadece Bekleyen Görevlerde) */}
+            {!isCompleted && (
+              <div className="flex shrink-0 flex-wrap justify-end gap-2 text-[10px] font-medium sm:text-xs">
+                <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                  {CATEGORY_LABELS[task.category]}
+                </span>
+                <span className={`rounded-full px-2 py-1 ${PRIORITY_STYLES[task.priority].color}`}>
+                  {PRIORITY_STYLES[task.priority].label} Öncelik
+                </span>
+              </div>
+            )}
           </div>
 
-          {task.description && (
-            <p className="mt-1 text-sm line-clamp-2" style={{ color: 'var(--text-tertiary)' }}>
-              {task.description}
-            </p>
+          {/* Sadece Bekleyen Görevlerde Gösterilen Detaylar */}
+          {!isCompleted && (
+            <>
+              {task.description && (
+                <p className="mt-1 text-xs break-words" style={{ color: 'var(--text-tertiary)' }}>
+                  {task.description}
+                </p>
+              )}
+
+              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
+                {task.due_date && (
+                  <span className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}>
+                    📅 {new Date(task.due_date).toLocaleDateString('tr-TR')}
+                    {isOverdue && ' (Gecikti)'}
+                  </span>
+                )}
+                
+                {task.application_id && task.application && (
+                  <Link 
+                    href="/board" 
+                    className="flex items-center gap-1 font-medium text-blue-500 hover:underline"
+                  >
+                    🔗 {task.application.company_name} - {task.application.position}
+                  </Link>
+                )}
+              </div>
+            </>
           )}
-
-          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
-            {task.due_date && (
-              <span className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}>
-                📅 {new Date(task.due_date).toLocaleDateString('tr-TR')}
-                {isOverdue && ' (Gecikti)'}
-              </span>
-            )}
-            
-            {task.application_id && task.application && (
-              <Link 
-                href="/board" 
-                className="flex items-center gap-1 font-medium text-blue-500 hover:underline"
-              >
-                🔗 {task.application.company_name} - {task.application.position}
-              </Link>
-            )}
-          </div>
         </div>
 
         {/* Aksiyonlar (Hover olunca görünür) */}
-        <div className="flex shrink-0 items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-          <button 
-            onClick={() => openForm(task)}
-            className="rounded p-1.5 text-blue-500 hover:bg-blue-500/10"
-            title="Düzenle"
-          >
-            ✎
-          </button>
+        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          {!isCompleted && (
+            <button 
+              onClick={() => openForm(task)}
+              className="rounded p-1 text-blue-500 hover:bg-blue-500/10 text-xs"
+              title="Düzenle"
+            >
+              ✎
+            </button>
+          )}
           <button 
             onClick={() => handleDelete(task.id)}
-            className="rounded p-1.5 text-red-500 hover:bg-red-500/10"
+            className="rounded p-1 text-red-500 hover:bg-red-500/10 text-xs"
             title="Sil"
           >
             ✕
@@ -164,7 +176,7 @@ export default function TodosPage() {
       <Header />
       
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-6xl">
           
           <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -190,29 +202,45 @@ export default function TodosPage() {
               Görevler yükleniyor...
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
               
-              {/* Bekleyenler */}
-              <section>
-                <h3 className="mb-4 text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                  Yapılacaklar ({pendingTasks.length})
-                </h3>
+              {/* Bekleyenler (Sol Taraf) */}
+              <section className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                    Yapılacaklar
+                  </h3>
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                    {pendingTasks.length}
+                  </span>
+                </div>
+                
                 {pendingTasks.length === 0 ? (
-                  <p className="text-sm italic text-slate-400 mb-6">Henüz hiç yapılacak göreviniz yok.</p>
+                  <div className="rounded-xl border border-dashed p-6 text-center text-sm italic text-slate-400" style={{ borderColor: 'var(--border)' }}>
+                    Henüz hiç yapılacak göreviniz yok.
+                  </div>
                 ) : (
-                  <div className="space-y-3 mb-6">
+                  <div className="space-y-3">
                     {pendingTasks.map(task => <TaskRow key={task.id} task={task} />)}
                   </div>
                 )}
               </section>
 
-              {/* Tamamlananlar */}
-              <section>
-                <h3 className="mb-4 text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                  Tamamlananlar ({completedTasks.length})
-                </h3>
+              {/* Tamamlananlar (Sağ Taraf) */}
+              <section className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                    Tamamlananlar
+                  </h3>
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                    {completedTasks.length}
+                  </span>
+                </div>
+                
                 {completedTasks.length === 0 ? (
-                  <p className="text-sm italic text-slate-400">Henüz tamamlanan görev yok.</p>
+                  <div className="rounded-xl border border-dashed p-6 text-center text-sm italic text-slate-400" style={{ borderColor: 'var(--border)' }}>
+                    Henüz tamamlanan görev yok.
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {completedTasks.map(task => <TaskRow key={task.id} task={task} />)}

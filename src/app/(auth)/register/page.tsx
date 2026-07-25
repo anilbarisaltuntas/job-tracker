@@ -66,13 +66,17 @@ export default function RegisterPage() {
       {/* Logo / Başlık */}
       <div className="mb-8 text-center">
         <div
-          className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl text-2xl font-bold shadow-lg"
-          style={{ backgroundColor: 'var(--logo-bg)', color: 'var(--logo-text)' }}
+          className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg"
+          style={{ backgroundColor: 'var(--logo-bg)' }}
         >
-          J
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" style={{ color: 'var(--logo-text)' }}>
+            <circle cx="6" cy="19" r="3"></circle>
+            <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path>
+            <circle cx="18" cy="5" r="3"></circle>
+          </svg>
         </div>
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          JobTracker
+          Application Route
         </h1>
         <p className="mt-2 text-sm" style={{ color: 'var(--text-tertiary)' }}>
           Yeni hesap oluştur

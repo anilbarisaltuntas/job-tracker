@@ -21,6 +21,10 @@ export type ApplicationSource =
   | 'company_website'
   | 'other'
 
+/** Uyumluluk (Match) ve Öncelik (Priority) seviyeleri */
+export type MatchLevel = 'low' | 'medium' | 'high'
+export type PriorityLevel = 'low' | 'medium' | 'high'
+
 /** Bir iletişim kişisinin veri yapısı */
 export interface Contact {
   id: string
@@ -68,6 +72,8 @@ export interface Application {
   follow_up_date: string | null
   source: ApplicationSource | null
   job_url: string | null
+  match_level: MatchLevel
+  priority_level: PriorityLevel
   notes: string | null
   cv_file_url: string | null        // yeni: yüklenen PDF dosyasının adresi
   kanban_order: number
@@ -119,6 +125,8 @@ export interface SavedJob {
   is_cv_updated: boolean
   is_message_drafted: boolean
   is_applied: boolean
+  match_level: MatchLevel
+  priority_level: PriorityLevel
   created_at: string
 }
 

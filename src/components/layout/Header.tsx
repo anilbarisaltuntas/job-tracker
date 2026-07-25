@@ -50,13 +50,17 @@ export default function Header() {
               className="flex h-7 w-7 items-center justify-center rounded-md"
               style={{ backgroundColor: 'var(--logo-bg)' }}
             >
-              <span className="text-sm font-bold" style={{ color: 'var(--logo-text)' }}>J</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" style={{ color: 'var(--logo-text)' }}>
+                <circle cx="6" cy="19" r="3"></circle>
+                <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path>
+                <circle cx="18" cy="5" r="3"></circle>
+              </svg>
             </div>
             <h1
               className="text-base font-semibold tracking-tight hidden sm:block"
               style={{ color: 'var(--text-primary)' }}
             >
-              JobTracker
+              Application Route
             </h1>
           </div>
 
