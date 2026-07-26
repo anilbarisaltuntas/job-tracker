@@ -208,8 +208,6 @@ export default function SettingsPage() {
                   style={{ color: 'var(--text-primary)' }}
                   placeholder="Statü Adı"
                 />
-
-
                 {/* Sil Butonu */}
                 <button 
                   onClick={() => handleDeleteStatus(status.id)}

@@ -98,8 +98,7 @@ export default function ApplicationDetail({
           border: '1px solid var(--border-strong)',
         }}
       >
-        {/* Üst renkli şerit */}
-        <div className="h-2 rounded-t-2xl" style={{ backgroundColor: column?.color || '#64748B' }} />
+        {/* Üst renkli şerit (Kaldırıldı veya standart hale getirilebilir. Daha sade olması için kaldırıyoruz) */}
 
         <div className="p-6">
           <button
@@ -109,7 +108,7 @@ export default function ApplicationDetail({
           >✕</button>
 
           {/* Durum badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-white" style={{ backgroundColor: column?.color || '#64748B' }}>
+          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: 'var(--badge-bg)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
             {column?.emoji} {column?.title}
           </span>
 

@@ -26,6 +26,8 @@ interface KanbanColumnProps {
   title: string
   emoji: string
   applications: Application[]
+  color?: string
+  bgColor?: string
   onCardClick: (application: Application) => void
   onAddClick: () => void
 }
@@ -35,6 +37,8 @@ export default function KanbanColumn({
   title,
   emoji,
   applications,
+  color = '#3B82F6',
+  bgColor = '#EFF6FF',
   onCardClick,
   onAddClick,
 }: KanbanColumnProps) {

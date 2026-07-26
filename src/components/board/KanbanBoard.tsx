@@ -299,6 +299,8 @@ export default function KanbanBoard() {
                   columnId={column.id}
                   title={column.title}
                   emoji={column.emoji}
+                  color={column.color}
+                  bgColor={column.bg_color}
                   applications={columnApps}
                   onCardClick={handleCardClick}
                   onAddClick={() => handleAddClick(column.id)}
