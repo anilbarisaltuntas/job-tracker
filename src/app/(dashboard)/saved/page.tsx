@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export const metadata = {
-  title: 'Kaydedilen İlanlar - Application Route',
+  title: 'Kaydedilen İlanlar - Başvuru Pusulası',
 }
 
 export default async function SavedJobsPage() {

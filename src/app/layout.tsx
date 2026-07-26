@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Application Route | Kariyer Takip Asistanı",
+  title: "Başvuru Pusulası | Kariyer Takip Asistanı",
   description: "İş başvurularınızı profesyonelce yönetin ve takip edin.",
 };
 
