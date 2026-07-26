@@ -19,7 +19,6 @@ export default function SavedJobsList() {
   const [postedDate, setPostedDate] = useState('')
   const [jobUrl, setJobUrl] = useState('')
   const [matchLevel, setMatchLevel] = useState<MatchLevel>('medium')
-  const [priorityLevel, setPriorityLevel] = useState<PriorityLevel>('medium')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isParsing, setIsParsing] = useState(false)
   const [editingJob, setEditingJob] = useState<SavedJob | null>(null)
@@ -59,8 +58,7 @@ export default function SavedJobsList() {
       position,
       job_url: jobUrl || null,
       posted_date: postedDate ? new Date(postedDate).toISOString() : null,
-      match_level: matchLevel,
-      priority_level: priorityLevel
+      match_level: matchLevel
     }
 
     if (editingJob) {
@@ -82,7 +80,6 @@ export default function SavedJobsList() {
     setPostedDate('')
     setJobUrl('')
     setMatchLevel('medium')
-    setPriorityLevel('medium')
     fetchJobs()
   }
 
@@ -93,7 +90,6 @@ export default function SavedJobsList() {
     setPostedDate('')
     setJobUrl('')
     setMatchLevel('medium')
-    setPriorityLevel('medium')
     setIsFormOpen(true)
   }
 
@@ -103,8 +99,7 @@ export default function SavedJobsList() {
     setPosition(job.position)
     setPostedDate(job.posted_date ? job.posted_date.split('T')[0] : '')
     setJobUrl(job.job_url || '')
-    setMatchLevel(job.match_level)
-    setPriorityLevel(job.priority_level)
+    setMatchLevel(job.match_level || 'medium')
     setIsFormOpen(true)
   }
 
@@ -169,7 +164,6 @@ export default function SavedJobsList() {
       position: jobToMove.position,
       job_url: jobToMove.job_url,
       match_level: jobToMove.match_level,
-      priority_level: jobToMove.priority_level,
       status: statusId,
       application_date: new Date().toISOString(),
       kanban_order: 0,
@@ -219,20 +213,12 @@ export default function SavedJobsList() {
                 <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{job.company_name}</p>
                 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                    job.match_level === 'high' ? 'bg-green-50 text-green-700 ring-green-600/20' :
-                    job.match_level === 'medium' ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20' :
-                    'bg-red-50 text-red-700 ring-red-600/10'
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase ${
+                    job.match_level === 'high' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
+                    job.match_level === 'medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
+                    'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'
                   }`}>
-                    {job.match_level === 'high' ? '🟢 Yüksek Uyumluluk' : job.match_level === 'medium' ? '🟡 Orta Uyumluluk' : '🔴 Düşük Uyumluluk'}
-                  </span>
-                  
-                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                    job.priority_level === 'high' ? 'bg-purple-50 text-purple-700 ring-purple-600/20' :
-                    job.priority_level === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-                    'bg-gray-50 text-gray-600 ring-gray-500/10'
-                  }`}>
-                    {job.priority_level === 'high' ? '🔥 Yüksek İstek' : job.priority_level === 'medium' ? '⚡ Orta İstek' : '🧊 Düşük İstek'}
+                    {job.match_level === 'high' ? 'Yüksek Uyum' : job.match_level === 'medium' ? 'Orta Uyum' : 'Düşük Uyum'}
                   </span>
                 </div>
 
@@ -341,36 +327,28 @@ export default function SavedJobsList() {
                 <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>Yayınlanma Tarihi</label>
                 <input type="date" value={postedDate} onChange={e => setPostedDate(e.target.value)} className="w-full rounded-xl border p-2.5 outline-none" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />
               </div>
-              <div>
-                <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>İlan Linki</label>
-                <div className="flex gap-2">
-                  <input type="url" value={jobUrl} onChange={e => setJobUrl(e.target.value)} className="w-full rounded-xl border p-2.5 outline-none" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} placeholder="https://..." />
-                  <button 
-                    type="button" 
-                    onClick={handleAutoFill}
-                    disabled={isParsing || !jobUrl}
-                    className="shrink-0 rounded-xl bg-blue-500/10 px-4 font-medium text-blue-500 transition-colors hover:bg-blue-500 hover:text-white disabled:opacity-50"
-                  >
-                    {isParsing ? '⏳ Bekleyin...' : '✨ Bilgileri Çek'}
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>İlana Uyumluluğum</label>
+                  <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>İlan Linki</label>
+                  <div className="flex gap-2">
+                    <input type="url" value={jobUrl} onChange={e => setJobUrl(e.target.value)} className="w-full rounded-xl border p-2.5 outline-none" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }} placeholder="https://..." />
+                    <button 
+                      type="button" 
+                      onClick={handleAutoFill}
+                      disabled={isParsing || !jobUrl}
+                      className="shrink-0 rounded-xl bg-blue-500/10 px-4 font-medium text-blue-500 transition-colors hover:bg-blue-500 hover:text-white disabled:opacity-50"
+                    >
+                      {isParsing ? '⏳ Bekleyin...' : '✨ Bilgileri Çek'}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>Uyumluluğum (Match)</label>
                   <select value={matchLevel} onChange={e => setMatchLevel(e.target.value as MatchLevel)} className="w-full rounded-xl border p-2.5 outline-none" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
                     <option value="low">🔴 Düşük</option>
                     <option value="medium">🟡 Orta</option>
                     <option value="high">🟢 Yüksek</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block font-medium" style={{ color: 'var(--text-secondary)' }}>İsteğim / Önceliğim</label>
-                  <select value={priorityLevel} onChange={e => setPriorityLevel(e.target.value as PriorityLevel)} className="w-full rounded-xl border p-2.5 outline-none" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
-                    <option value="low">🧊 Düşük</option>
-                    <option value="medium">⚡ Orta</option>
-                    <option value="high">🔥 Yüksek</option>
                   </select>
                 </div>
               </div>

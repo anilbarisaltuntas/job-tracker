@@ -272,7 +272,7 @@ export default function ApplicationForm({
           </div>
 
           {/* Link + Metrikler */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>İlan Linki</label>
               <input name="job_url" type="url" value={formData.job_url} onChange={handleChange} placeholder="https://..." className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
@@ -283,14 +283,6 @@ export default function ApplicationForm({
                 <option value="low">🔴 Düşük</option>
                 <option value="medium">🟡 Orta</option>
                 <option value="high">🟢 Yüksek</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Önceliğim (Priority)</label>
-              <select name="priority_level" value={formData.priority_level} onChange={handleChange} className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}>
-                <option value="low">🧊 Düşük</option>
-                <option value="medium">⚡ Orta</option>
-                <option value="high">🔥 Yüksek</option>
               </select>
             </div>
           </div>

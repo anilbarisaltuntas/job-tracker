@@ -49,24 +49,21 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
         {application.position}
       </p>
 
-      {/* Metrik Rozetleri (Uyumluluk & Öncelik) */}
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
+      {/* Metrik Rozetleri (Uyumluluk & Tarih) */}
+      <div className="mt-3 flex flex-wrap gap-2">
         {application.match_level && (
-          <span className={`inline-flex items-center rounded text-[10px] font-medium px-1.5 py-0.5 ring-1 ring-inset ${
-            application.match_level === 'high' ? 'bg-green-50 text-green-700 ring-green-600/20' :
-            application.match_level === 'medium' ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20' :
-            'bg-red-50 text-red-700 ring-red-600/10'
+          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase ${
+            application.match_level === 'high' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
+            application.match_level === 'medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
+            'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'
           }`}>
-            {application.match_level === 'high' ? '🟢 Yüksek' : application.match_level === 'medium' ? '🟡 Orta' : '🔴 Düşük'} Uyumluluk
+            {application.match_level === 'high' ? 'Yüksek Uyum' : application.match_level === 'medium' ? 'Orta Uyum' : 'Düşük Uyum'}
           </span>
         )}
-        {application.priority_level && (
-          <span className={`inline-flex items-center rounded text-[10px] font-medium px-1.5 py-0.5 ring-1 ring-inset ${
-            application.priority_level === 'high' ? 'bg-purple-50 text-purple-700 ring-purple-600/20' :
-            application.priority_level === 'medium' ? 'bg-blue-50 text-blue-700 ring-blue-600/20' :
-            'bg-gray-50 text-gray-600 ring-gray-500/10'
-          }`}>
-            {application.priority_level === 'high' ? '🔥 Yüksek' : application.priority_level === 'medium' ? '⚡ Orta' : '🧊 Düşük'} İstek
+        
+        {application.application_date && (
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+            {new Date(application.application_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
           </span>
         )}
       </div>
