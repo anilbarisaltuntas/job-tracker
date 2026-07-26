@@ -24,6 +24,13 @@ const CATEGORIES: { id: TodoCategory, label: string }[] = [
   { id: 'networking', label: 'Networking' }
 ]
 
+const getLocalDatetime = (isoStr?: string | null) => {
+  if (!isoStr) return ''
+  const d = new Date(isoStr)
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset())
+  return d.toISOString().slice(0, 16)
+}
+
 export default function TodoForm({ editingTodo, preselectedApplicationId, onClose, onSave }: TodoFormProps) {
   const isEditing = !!editingTodo
   const supabase = createClient()
@@ -36,7 +43,7 @@ export default function TodoForm({ editingTodo, preselectedApplicationId, onClos
     status: editingTodo?.status || 'pending',
     priority: editingTodo?.priority || 'medium',
     category: editingTodo?.category || 'general',
-    due_date: editingTodo?.due_date ? new Date(editingTodo.due_date).toISOString().split('T')[0] : '',
+    due_date: getLocalDatetime(editingTodo?.due_date),
     application_id: editingTodo?.application_id || preselectedApplicationId || ''
   })
 
@@ -149,9 +156,9 @@ export default function TodoForm({ editingTodo, preselectedApplicationId, onClos
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>Bitiş Tarihi</label>
+              <label className="mb-1.5 block text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>Bitiş Tarihi ve Saati</label>
               <input 
-                type="date"
+                type="datetime-local"
                 value={formData.due_date || ''}
                 onChange={e => setFormData({...formData, due_date: e.target.value})}
                 className="w-full rounded-xl border px-3 py-2 text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500/50"

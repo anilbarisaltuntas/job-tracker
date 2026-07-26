@@ -15,18 +15,70 @@ import { useTheme } from '@/context/ThemeContext'
 
 export default function Header() {
   const [userEmail, setUserEmail] = useState<string>('')
+  const [dueTasks, setDueTasks] = useState<any[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
+
   const supabase = createClient()
   const router = useRouter()
   const pathname = usePathname()
   const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
-    const getUser = async () => {
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) setUserEmail(user.email || '')
+      if (user) {
+        setUserEmail(user.email || '')
+        
+        // Vakti gelmiş görevleri (hatırlatıcıları) kontrol et
+        const checkNotifications = async () => {
+          const now = new Date().toISOString()
+          const { data } = await supabase
+            .from('todo_tasks')
+            .select('*, application:applications(company_name)')
+            .eq('user_id', user.id)
+            .neq('status', 'completed')
+            .lte('due_date', now)
+            .order('due_date', { ascending: false })
+            
+          if (data) {
+            setDueTasks(prevTasks => {
+              // Yeni bildirimler varsa tarayıcı bildirimi (Push) gönder
+              if (data.length > prevTasks.length && Notification.permission === 'granted') {
+                const newTasks = data.filter(d => !prevTasks.find(p => p.id === d.id))
+                newTasks.forEach(task => {
+                  new Notification('Hatırlatıcı: ' + task.title, {
+                    body: task.application?.company_name ? `🏢 ${task.application.company_name} için vaktiniz geldi.` : 'Görevinizin vakti geldi.',
+                    icon: '/favicon.ico'
+                  })
+                })
+              }
+              return data
+            })
+          }
+        }
+        
+        // Tarayıcı bildirimi izni iste
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+            Notification.requestPermission()
+          }
+        }
+        
+        checkNotifications()
+        const interval = setInterval(checkNotifications, 60000) // Her dakika kontrol et
+        return () => clearInterval(interval)
+      }
     }
-    getUser()
+    const cleanup = init()
+    return () => {
+      cleanup.then(cleanFn => { if (cleanFn) cleanFn() })
+    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleMarkAsCompleted = async (taskId: string) => {
+    await supabase.from('todo_tasks').update({ status: 'completed' }).eq('id', taskId)
+    setDueTasks(prev => prev.filter(t => t.id !== taskId))
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -107,8 +159,76 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* Sağ: Tema + Kullanıcı bilgisi + Çıkış */}
-        <div className="flex items-center gap-3">
+        {/* Sağ: Bildirimler + Tema + Kullanıcı bilgisi + Çıkış */}
+        <div className="flex items-center gap-3 relative">
+          
+          {/* Bildirim Zili */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+              style={{ color: 'var(--text-tertiary)' }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'var(--bg-surface-hover)'
+                e.currentTarget.style.color = 'var(--text-primary)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent'
+                e.currentTarget.style.color = 'var(--text-tertiary)'
+              }}
+              title="Hatırlatıcılar"
+            >
+              🔔
+              {dueTasks.length > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
+                  {dueTasks.length}
+                </span>
+              )}
+            </button>
+
+            {/* Bildirim Dropdown */}
+            {showNotifications && (
+              <div 
+                className="absolute right-0 mt-2 w-80 rounded-xl shadow-lg p-2"
+                style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)' }}
+              >
+                <div className="mb-2 px-2 pt-2 pb-1 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                  Hatırlatıcılar
+                </div>
+                {dueTasks.length === 0 ? (
+                  <div className="p-3 text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
+                    Yaklaşan bir hatırlatıcınız yok.
+                  </div>
+                ) : (
+                  <div className="max-h-64 overflow-y-auto space-y-1">
+                    {dueTasks.map(task => (
+                      <div key={task.id} className="p-2.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-colors group">
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{task.title}</p>
+                            {task.application?.company_name && (
+                              <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-secondary)' }}>🏢 {task.application.company_name}</p>
+                            )}
+                            <p className="text-[10px] mt-0.5 text-red-500">
+                              Vakti Geldi: {new Date(task.due_date).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                          <button 
+                            onClick={() => handleMarkAsCompleted(task.id)}
+                            className="text-[10px] bg-green-500/10 text-green-600 px-2 py-1 rounded hover:bg-green-500 hover:text-white transition-colors"
+                            title="Tamamlandı"
+                          >
+                            ✓
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Tema değiştirme butonu */}
           <button
             onClick={toggleTheme}

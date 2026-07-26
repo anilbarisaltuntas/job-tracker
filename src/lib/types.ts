@@ -39,6 +39,7 @@ export interface Contact {
   email_date: string | null
   notes: string | null
   sort_order: number
+  linkedin_url: string | null
   created_at: string
 }
 
@@ -53,6 +54,7 @@ export interface ContactFormData {
   email_sent: boolean
   email_date: string
   notes: string
+  linkedin_url: string
 }
 
 /** Bir iş başvurusunun tam veri yapısı */

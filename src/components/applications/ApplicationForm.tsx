@@ -33,6 +33,7 @@ const emptyContact = (): ContactFormData => ({
   email_sent: false,
   email_date: '',
   notes: '',
+  linkedin_url: '',
 })
 
 export default function ApplicationForm({
@@ -73,6 +74,7 @@ export default function ApplicationForm({
         email_sent: c.email_sent,
         email_date: c.email_date || '',
         notes: c.notes || '',
+        linkedin_url: c.linkedin_url || '',
       }))
     }
     return []
@@ -201,6 +203,7 @@ export default function ApplicationForm({
             email_sent: c.email_sent,
             email_date: c.email_date || null,
             notes: c.notes || null,
+            linkedin_url: c.linkedin_url || null,
             sort_order: index,
           }))
 
@@ -438,6 +441,15 @@ export default function ApplicationForm({
                           value={contact.email}
                           onChange={(e) => updateContact(index, 'email', e.target.value)}
                           placeholder="ör: ahmet@sirket.com"
+                          className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>LinkedIn Profil URL</label>
+                        <input
+                          value={contact.linkedin_url || ''}
+                          onChange={(e) => updateContact(index, 'linkedin_url', e.target.value)}
+                          placeholder="ör: https://linkedin.com/in/ornek"
                           className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}
                         />
                       </div>

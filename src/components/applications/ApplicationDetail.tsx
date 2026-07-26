@@ -230,12 +230,27 @@ export default function ApplicationDetail({
                     style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}
                   >
                     <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
-                        {contact.role && <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{contact.role}</p>}
-                        {contact.email && (
-                          <a href={`mailto:${contact.email}`} className="text-xs text-blue-500 hover:underline">
-                            {contact.email}
+                      <div className="flex w-full items-start justify-between">
+                        <div>
+                          <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
+                          {contact.role && <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{contact.role}</p>}
+                          {contact.email && (
+                            <a href={`mailto:${contact.email}`} className="text-xs text-blue-500 hover:underline">
+                              {contact.email}
+                            </a>
+                          )}
+                        </div>
+                        {contact.linkedin_url && (
+                          <a 
+                            href={contact.linkedin_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500 hover:text-white"
+                            title="LinkedIn Profili"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                            </svg>
                           </a>
                         )}
                       </div>
@@ -405,6 +420,18 @@ export default function ApplicationDetail({
 
           {/* Aksiyon Butonları */}
           <div className="mt-8 flex gap-3 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+            <button
+              onClick={() => setIsTodoFormOpen(true)}
+              className="flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors hover:bg-blue-500/10 hover:text-blue-500"
+              style={{
+                backgroundColor: 'var(--bg-surface)',
+                border: '1px solid var(--border)',
+                color: 'var(--text-primary)',
+              }}
+            >
+              ⏰ Hatırlatıcı Kur
+            </button>
+
             <button
               onClick={() => onEdit(application)}
               className="flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"

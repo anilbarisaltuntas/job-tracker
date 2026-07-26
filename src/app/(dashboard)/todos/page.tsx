@@ -130,7 +130,7 @@ export default function TodosPage() {
               <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
                 {task.due_date && (
                   <span className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}>
-                    📅 {new Date(task.due_date).toLocaleDateString('tr-TR')}
+                    📅 {new Date(task.due_date).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                     {isOverdue && ' (Gecikti)'}
                   </span>
                 )}
