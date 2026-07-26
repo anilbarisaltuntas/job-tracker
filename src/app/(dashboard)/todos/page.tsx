@@ -70,7 +70,10 @@ export default function TodosPage() {
     fetchTasks()
   }
 
-  const pendingTasks = tasks.filter(t => t.status !== 'completed')
+  const priorityOrder = { high: 1, medium: 2, low: 3 }
+  const pendingTasks = tasks
+    .filter(t => t.status !== 'completed')
+    .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
   const completedTasks = tasks.filter(t => t.status === 'completed')
 
   const TaskRow = ({ task }: { task: TodoTask }) => {
@@ -79,12 +82,10 @@ export default function TodosPage() {
 
     return (
       <div 
-        className={`group flex items-start gap-3 rounded-xl transition-all ${
-          isCompleted 
-            ? 'py-2 px-1' 
-            : 'border p-3 hover:shadow-md'
+        className={`group flex items-start gap-3 rounded-xl transition-all border p-3 hover:shadow-md ${
+          isCompleted ? 'opacity-50 grayscale-[30%]' : ''
         }`}
-        style={!isCompleted ? { backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' } : undefined}
+        style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}
       >
         {/* Checkbox */}
         <button 
@@ -101,51 +102,45 @@ export default function TodosPage() {
         {/* İçerik */}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
-            <h3 className={`text-sm break-words ${isCompleted ? 'line-through text-slate-400 font-medium' : 'font-semibold'}`} style={{ color: isCompleted ? undefined : 'var(--text-primary)' }}>
+            <h3 className={`text-sm break-words font-semibold`} style={{ color: 'var(--text-primary)' }}>
               {task.title}
             </h3>
             
-            {/* Etiketler (Sadece Bekleyen Görevlerde) */}
-            {!isCompleted && (
-              <div className="flex shrink-0 flex-wrap justify-end gap-2 text-[10px] font-medium sm:text-xs">
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  {CATEGORY_LABELS[task.category]}
-                </span>
-                <span className={`rounded-full px-2 py-1 ${PRIORITY_STYLES[task.priority].color}`}>
-                  {PRIORITY_STYLES[task.priority].label} Öncelik
-                </span>
-              </div>
-            )}
+            {/* Etiketler */}
+            <div className="flex shrink-0 flex-wrap justify-end gap-2 text-[10px] font-medium sm:text-xs">
+              <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                {CATEGORY_LABELS[task.category]}
+              </span>
+              <span className={`rounded-full px-2 py-1 ${PRIORITY_STYLES[task.priority].color}`}>
+                {PRIORITY_STYLES[task.priority].label} Öncelik
+              </span>
+            </div>
           </div>
 
-          {/* Sadece Bekleyen Görevlerde Gösterilen Detaylar */}
-          {!isCompleted && (
-            <>
-              {task.description && (
-                <p className="mt-1 text-xs break-words" style={{ color: 'var(--text-tertiary)' }}>
-                  {task.description}
-                </p>
-              )}
-
-              <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
-                {task.due_date && (
-                  <span className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}>
-                    📅 {new Date(task.due_date).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    {isOverdue && ' (Gecikti)'}
-                  </span>
-                )}
-                
-                {task.application_id && task.application && (
-                  <Link 
-                    href="/board" 
-                    className="flex items-center gap-1 font-medium text-blue-500 hover:underline"
-                  >
-                    🔗 {task.application.company_name} - {task.application.position}
-                  </Link>
-                )}
-              </div>
-            </>
+          {/* Detaylar */}
+          {task.description && (
+            <p className="mt-1 text-xs break-words" style={{ color: 'var(--text-tertiary)' }}>
+              {task.description}
+            </p>
           )}
+
+          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
+            {task.due_date && (
+              <span className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}>
+                📅 {new Date(task.due_date).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                {isOverdue && ' (Gecikti)'}
+              </span>
+            )}
+            
+            {task.application_id && task.application && (
+              <Link 
+                href="/board" 
+                className="flex items-center gap-1 font-medium text-blue-500 hover:underline"
+              >
+                🔗 {task.application.company_name} - {task.application.position}
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Aksiyonlar (Hover olunca görünür) */}
