@@ -113,13 +113,18 @@ export default function KanbanColumn({
             {applications.length === 0 && !snapshot.isDraggingOver && (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Henüz başvuru yok</p>
-                <button
-                  onClick={onAddClick}
-                  className="mt-2 text-xs text-blue-500 hover:text-blue-400"
-                >
-                  + Başvuru Ekle
-                </button>
               </div>
+            )}
+
+            {/* Her zaman görünecek Ekle butonu */}
+            {!snapshot.isDraggingOver && (
+              <button
+                onClick={onAddClick}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-medium transition-colors hover:bg-slate-500/10"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                + Başvuru Ekle
+              </button>
             )}
           </div>
         )}
