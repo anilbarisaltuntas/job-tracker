@@ -35,11 +35,11 @@ export default function KanbanColumn({
       {/* Sütun başlığı */}
       <div className="mb-2 flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] opacity-70 grayscale">{emoji}</span>
-          <h2 className="text-[12px] font-medium tracking-wide" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+          <span className="text-[15px] opacity-70 grayscale">{emoji}</span>
+          <h2 className="text-[14px] font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>{title}</h2>
           
           <span
-            className="ml-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--badge-bg)] px-1 text-[9px] font-medium"
+            className="ml-1.5 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--badge-bg)] px-1.5 text-[11px] font-semibold"
             style={{ color: 'var(--text-secondary)' }}
           >
             {applications.length}
@@ -49,7 +49,7 @@ export default function KanbanColumn({
         {/* Yeni başvuru ekleme butonu */}
         <button
           onClick={onAddClick}
-          className="flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
           title="Yeni başvuru ekle"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

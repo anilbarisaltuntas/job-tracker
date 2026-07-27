@@ -17,19 +17,19 @@ export default async function BoardPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg)]">
       <Header />
-      <main className="relative z-10 flex-1 overflow-y-auto p-10">
-        <div className="mb-8 animate-stagger max-w-[1400px] mx-auto flex items-center justify-between">
+      <main className="relative z-10 flex-1 overflow-y-auto px-6 py-8 w-full">
+        <div className="mb-8 animate-stagger w-full flex items-center justify-between">
           <div>
-            <h2 className="text-[20px] font-medium tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <h2 className="text-[24px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
               Takip Panosu
             </h2>
-            <p className="mt-1 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+            <p className="mt-1 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
               Tüm başvuru süreçleriniz tek bir yerde.
             </p>
           </div>
         </div>
         
-        <div className="max-w-[1400px] mx-auto">
+        <div className="w-full">
           <KanbanBoard />
         </div>
       </main>

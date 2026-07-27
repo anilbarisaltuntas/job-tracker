@@ -19,7 +19,7 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
     >
       {/* Şirket Adı & İkon */}
       <div className="flex items-start justify-between">
-        <h3 className="text-[13px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+        <h3 className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
           {application.company_name}
         </h3>
         
@@ -31,28 +31,28 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
       </div>
 
       {/* Pozisyon */}
-      <p className="mt-1 text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
+      <p className="mt-1 text-[14px]" style={{ color: 'var(--text-tertiary)' }}>
         {application.position}
       </p>
 
       {/* Metrik Rozetleri */}
       <div className="mt-4 flex flex-wrap items-center gap-1.5">
         {application.match_level && (
-          <span className={`inline-flex items-center rounded-[4px] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide border ${
+          <span className={`inline-flex items-center rounded-[4px] px-2 py-0.5 text-[11px] font-medium tracking-wide border ${
             application.match_level === 'high' ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0] dark:bg-[#064E3B] dark:text-[#34D399] dark:border-[#065F46]' : 
             application.match_level === 'medium' ? 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A] dark:bg-[#451A03] dark:text-[#FBBF24] dark:border-[#78350F]' : 
             'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA] dark:bg-[#7F1D1D] dark:text-[#F87171] dark:border-[#991B1B]'
           }`}>
-            {application.match_level === 'high' ? 'Yüksek' : application.match_level === 'medium' ? 'Orta' : 'Düşük'}
+            {application.match_level === 'high' ? 'Yüksek Uyum' : application.match_level === 'medium' ? 'Orta Uyum' : 'Düşük Uyum'}
           </span>
         )}
         
         {application.application_date && (
           <span 
-            className="inline-flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide border border-[var(--border)]"
+            className="inline-flex items-center gap-1 rounded-[4px] px-2 py-0.5 text-[11px] font-medium tracking-wide border border-[var(--border)]"
             style={{ backgroundColor: 'var(--badge-bg)', color: 'var(--text-secondary)' }}
           >
-            {new Date(application.application_date).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}
+            {new Date(application.application_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
           </span>
         )}
       </div>
