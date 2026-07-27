@@ -30,7 +30,7 @@ export default function KanbanColumn({
   onAddClick,
 }: KanbanColumnProps) {
   return (
-    <div className="flex h-[550px] w-full flex-col bg-[var(--bg-column)] rounded-lg border border-transparent transition-colors hover:border-[var(--border)]">
+    <div className="flex min-h-[150px] h-fit w-full flex-col bg-[var(--bg-column)] rounded-lg border border-transparent transition-colors hover:border-[var(--border)]">
       
       {/* Sütun başlığı */}
       <div className="mb-2 flex items-center justify-between px-3 py-3">
@@ -65,7 +65,7 @@ export default function KanbanColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-1 space-y-2 overflow-y-auto px-2 py-1 transition-colors duration-200 rounded-b-lg ${
+            className={`flex-1 space-y-2 px-2 py-1 transition-colors duration-200 rounded-b-lg ${
               snapshot.isDraggingOver ? 'bg-[var(--badge-bg)]' : ''
             }`}
           >

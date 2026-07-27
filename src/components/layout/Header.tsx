@@ -89,7 +89,7 @@ export default function Header() {
                 <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
               </svg>
             </div>
-            <h1 className="text-[13px] font-semibold tracking-tight hidden sm:block" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-[16px] font-semibold tracking-tight hidden sm:block" style={{ color: 'var(--text-primary)' }}>
               Başvuru Pusulası
             </h1>
           </div>
@@ -106,7 +106,7 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="relative py-4 text-[13px] font-medium transition-colors"
+                  className="relative py-4 text-[15px] font-medium transition-colors"
                   style={{
                     color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
                   }}
