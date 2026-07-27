@@ -9,9 +9,6 @@ import Header from '@/components/layout/Header'
  * Bu bir Server Component — sunucuda çalışır.
  * İşi: kullanıcının giriş yaptığını doğrula.
  * Asıl UI'ı Client Component olan KanbanBoard render eder.
- * 
- * Neden ayrı? Server Component'te auth kontrolü daha güvenli.
- * Client Component'te interaktif UI (sürükle-bırak, modal) yapabiliyoruz.
  */
 export default async function BoardPage() {
   const supabase = await createClient()
@@ -24,16 +21,13 @@ export default async function BoardPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 overflow-y-auto p-6">
-        <div className="mb-8 pl-2">
-          <h2
-            className="text-2xl font-semibold tracking-tight"
-            style={{ color: 'var(--text-primary)' }}
-          >
+      <main className="relative z-10 flex-1 overflow-y-auto p-8">
+        <div className="mb-10 text-center animate-fade-in-up">
+          <h2 className="text-4xl font-extrabold tracking-tight text-gradient-animated">
             Başvuru Takip Panosu
           </h2>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-tertiary)' }}>
-            İş arayış sürecinizi sürükle-bırak yöntemiyle yönetin
+          <p className="mt-3 text-[15px] font-medium" style={{ color: 'var(--text-secondary)' }}>
+            Kariyer yolculuğunu profesyonelce, gücün doruklarında yönet.
           </p>
         </div>
         <KanbanBoard />

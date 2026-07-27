@@ -1,84 +1,97 @@
 @import "tailwindcss";
 
 /* ==============================
-   TEMA DEĞİŞKENLERİ
+   TEMA DEĞİŞKENLERİ — WOW (Dynamic Glass)
    ============================== */
 
 /* Dark Tema (Varsayılan) */
 :root,
 [data-theme="dark"] {
-  --bg:              #121214;
-  --bg-surface:      rgba(255, 255, 255, 0.04);
-  --bg-surface-hover: rgba(255, 255, 255, 0.08);
-  --bg-elevated:     #18181B;
-  --bg-header:       rgba(18, 18, 20, 0.8);
+  /* Arka plan tamamen derin bir gece mavisi/mor karışımı */
+  --bg:              #05050A; 
+  
+  /* Gerçek Glassmorphism (Çok Düşük Opacity) */
+  --bg-surface:      rgba(255, 255, 255, 0.03);
+  --bg-surface-hover: rgba(255, 255, 255, 0.07);
+  --bg-elevated:     rgba(10, 10, 18, 0.6);
+  --bg-header:       rgba(5, 5, 10, 0.4);
 
-  --border:          rgba(255, 255, 255, 0.10);
-  --border-hover:    rgba(255, 255, 255, 0.20);
-  --border-strong:   rgba(255, 255, 255, 0.20);
+  /* İnce Beyaz Parlak Çizgiler (Glass Edge) */
+  --border:          rgba(255, 255, 255, 0.08);
+  --border-hover:    rgba(255, 255, 255, 0.25);
+  --border-strong:   rgba(255, 255, 255, 0.15);
 
-  --text-primary:    rgba(255, 255, 255, 0.90);
-  --text-secondary:  rgba(255, 255, 255, 0.60);
-  --text-tertiary:   rgba(255, 255, 255, 0.40);
+  --text-primary:    #FFFFFF;
+  --text-secondary:  rgba(255, 255, 255, 0.70);
+  --text-tertiary:   rgba(255, 255, 255, 0.45);
   --text-inverted:   #000000;
 
-  --input-bg:        rgba(255, 255, 255, 0.05);
+  --input-bg:        rgba(255, 255, 255, 0.04);
   --input-border:    rgba(255, 255, 255, 0.10);
-  --input-focus:     rgba(255, 255, 255, 0.20);
+  --input-focus:     #EC4899; /* Neon Pembe */
 
-  --badge-bg:        rgba(255, 255, 255, 0.10);
-  --badge-text:      rgba(255, 255, 255, 0.60);
+  --badge-bg:        rgba(255, 255, 255, 0.1);
+  --badge-text:      rgba(255, 255, 255, 0.8);
 
-  --btn-primary-bg:  #FFFFFF;
-  --btn-primary-text: #000000;
-  --btn-primary-hover: #E5E5E5;
+  /* Neon Renkler (Canlı Mor ve Pembe) */
+  --accent:          #8B5CF6; /* Mor */
+  --accent-secondary:#EC4899; /* Pembe */
+  --accent-hover:    #A78BFA;
+  --accent-subtle:   rgba(139, 92, 246, 0.2);
 
-  --logo-bg:         #FFFFFF;
-  --logo-text:       #000000;
+  --btn-primary-bg:  linear-gradient(135deg, #8B5CF6, #EC4899);
+  --btn-primary-text: #FFFFFF;
 
-  --glow-color:      rgba(0, 0, 0, 0.12);
-  --gradient-subtle: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 60%);
+  --logo-bg:         linear-gradient(135deg, #3B82F6, #8B5CF6, #EC4899);
+  --logo-text:       #FFFFFF;
 
-  --scrollbar-thumb: rgba(255, 255, 255, 0.10);
-  --scrollbar-hover: rgba(255, 255, 255, 0.20);
+  --glow-color:      rgba(236, 72, 153, 0.3); /* Pembe Glow */
+  --glow-accent:     rgba(139, 92, 246, 0.4); /* Mor Glow */
+  
+  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --scrollbar-hover: rgba(255, 255, 255, 0.30);
 }
 
 /* Light Tema */
 [data-theme="light"] {
-  --bg:              #F5F5F5;
-  --bg-surface:      #FFFFFF;
-  --bg-surface-hover: #F0F0F0;
-  --bg-elevated:     #FFFFFF;
-  --bg-header:       rgba(255, 255, 255, 0.7);
+  --bg:              #F8FAFC; 
+  --bg-surface:      rgba(255, 255, 255, 0.6);
+  --bg-surface-hover: rgba(255, 255, 255, 0.9);
+  --bg-elevated:     rgba(255, 255, 255, 0.8);
+  --bg-header:       rgba(255, 255, 255, 0.6);
 
   --border:          rgba(0, 0, 0, 0.08);
-  --border-hover:    rgba(0, 0, 0, 0.15);
+  --border-hover:    rgba(0, 0, 0, 0.20);
   --border-strong:   rgba(0, 0, 0, 0.12);
 
-  --text-primary:    #111111;
-  --text-secondary:  #555555;
-  --text-tertiary:   #999999;
+  --text-primary:    #0F172A;
+  --text-secondary:  #475569;
+  --text-tertiary:   #94A3B8;
   --text-inverted:   #FFFFFF;
 
-  --input-bg:        #FFFFFF;
-  --input-border:    rgba(0, 0, 0, 0.12);
-  --input-focus:     rgba(0, 0, 0, 0.25);
+  --input-bg:        rgba(255, 255, 255, 0.8);
+  --input-border:    rgba(0, 0, 0, 0.10);
+  --input-focus:     #8B5CF6;
 
   --badge-bg:        rgba(0, 0, 0, 0.06);
-  --badge-text:      #666666;
+  --badge-text:      #475569;
 
-  --btn-primary-bg:  #111111;
+  --accent:          #8B5CF6;
+  --accent-secondary:#EC4899;
+  --accent-hover:    #7C3AED;
+  --accent-subtle:   rgba(139, 92, 246, 0.15);
+
+  --btn-primary-bg:  linear-gradient(135deg, #8B5CF6, #EC4899);
   --btn-primary-text: #FFFFFF;
-  --btn-primary-hover: #333333;
 
-  --logo-bg:         #111111;
+  --logo-bg:         linear-gradient(135deg, #3B82F6, #8B5CF6, #EC4899);
   --logo-text:       #FFFFFF;
 
-  --glow-color:      rgba(0, 0, 0, 0.06);
-  --gradient-subtle: radial-gradient(circle at 50% 0%, rgba(0,0,0,0.02) 0%, transparent 60%);
+  --glow-color:      rgba(236, 72, 153, 0.2);
+  --glow-accent:     rgba(139, 92, 246, 0.2);
 
-  --scrollbar-thumb: rgba(0, 0, 0, 0.12);
-  --scrollbar-hover: rgba(0, 0, 0, 0.25);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-hover: rgba(0, 0, 0, 0.30);
 }
 
 /* ==============================
@@ -92,71 +105,122 @@
 }
 
 /* ==============================
-   GLOBAL STİLLER
+   GLOBAL STİLLER & AURORA BACKGROUND
    ============================== */
 body {
   background-color: var(--bg);
   color: var(--text-primary);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), 'Inter', sans-serif;
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  /* Aurora Gradient Arka Plan */
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.15), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.15), transparent 50%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Tema geçişlerinde pürüzsüz animasyon */
+[data-theme="light"] body {
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.08), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.08), transparent 40%),
+    radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.08), transparent 50%);
+}
+
+/* Animasyonlar ve Pürüzsüz Geçişler */
 *, *::before, *::after {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease;
+  transition: background-color 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              border-color 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              color 0.3s cubic-bezier(0.25, 1, 0.5, 1),
+              box-shadow 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-/* Animasyon olan elementlerde çakışmasın */
-[draggable="true"],
-input, textarea, select, button {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease, opacity 0.15s ease;
+[draggable="true"], input, textarea, select, button {
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* ==============================
+   ANIMASYONLAR
+   ============================== */
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+
+@keyframes neonPulse {
+  0%, 100% { box-shadow: 0 0 10px 0 var(--glow-color), inset 0 0 5px 0 var(--glow-accent); }
+  50% { box-shadow: 0 0 20px 5px var(--glow-color), inset 0 0 10px 2px var(--glow-accent); }
 }
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 4px;
+
+@keyframes gradientText {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-hover);
+
+.animate-pop-in {
+  animation: popIn 0.5s cubic-bezier(0.25, 1.5, 0.5, 1) forwards;
 }
+
+.text-gradient-animated {
+  background: linear-gradient(270deg, #3B82F6, #8B5CF6, #EC4899, #3B82F6);
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradientText 6s ease infinite;
+}
+
+/* Kart Stagger Animasyonu */
+.animate-stagger > * {
+  opacity: 0;
+  animation: popIn 0.5s cubic-bezier(0.25, 1.5, 0.5, 1) forwards;
+}
+.animate-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.animate-stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.animate-stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.animate-stagger > *:nth-child(4) { animation-delay: 0.20s; }
+.animate-stagger > *:nth-child(5) { animation-delay: 0.25s; }
+
+/* ==============================
+   GLASSMORPHISM UTILS
+   ============================== */
+.glass-panel {
+  background: var(--bg-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+.glass-panel:hover {
+  background: var(--bg-surface-hover);
+  border-color: var(--border-hover);
+}
+
+/* ==============================
+   FOCUS RING & SCROLLBAR
+   ============================== */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--input-focus) !important;
+  box-shadow: 0 0 15px 0 var(--glow-color) !important;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
 
 /* =========================================
    TIPTAP RICH TEXT EDITOR STYLES
    ========================================= */
-.tiptap-editor {
-  line-height: 1.5;
-}
-
-.tiptap-editor p {
-  margin-bottom: 0.75em;
-}
-
-.tiptap-editor ul {
-  list-style-type: disc;
-  padding-left: 1.5rem;
-  margin-bottom: 0.75em;
-}
-
-.tiptap-editor ol {
-  list-style-type: decimal;
-  padding-left: 1.5rem;
-  margin-bottom: 0.75em;
-}
-
-.tiptap-editor strong {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* Placeholder stili */
+.tiptap-editor { line-height: 1.6; }
+.tiptap-editor p { margin-bottom: 0.75em; }
+.tiptap-editor ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75em; }
+.tiptap-editor ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75em; }
+.tiptap-editor strong { font-weight: bold; color: var(--text-primary); }
 .tiptap-editor p.is-editor-empty:first-child::before {
   color: var(--text-tertiary);
   content: attr(data-placeholder);

@@ -2,8 +2,7 @@
  * AUTH LAYOUT
  * 
  * Login ve Register sayfalarını saran layout.
- * Ortalanmış, güzel bir arka planlı sayfa çerçevesi sağlar.
- * Dashboard layout'undan farklı — sidebar/header yok.
+ * Ortalanmış, dekoratif arka planlı sayfa çerçevesi sağlar.
  */
 export default function AuthLayout({
   children,
@@ -15,14 +14,15 @@ export default function AuthLayout({
       className="flex min-h-screen items-center justify-center px-4"
       style={{ backgroundColor: 'var(--bg)' }}
     >
-      {/* Arka plandaki dekoratif elementler */}
+      {/* Dekoratif gradient blob'lar */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl" />
+        <div className="absolute -top-40 right-1/4 h-96 w-96 rounded-full bg-indigo-500/8 blur-[100px]" />
+        <div className="absolute top-1/3 -left-20 h-72 w-72 rounded-full bg-violet-500/6 blur-[80px]" />
+        <div className="absolute -bottom-32 right-1/3 h-80 w-80 rounded-full bg-indigo-500/5 blur-[90px]" />
       </div>
 
-      {/* Sayfa içeriği (login veya register formu buraya gelir) */}
-      <div className="relative z-10 w-full max-w-md">
+      {/* Sayfa içeriği */}
+      <div className="relative z-10 w-full max-w-md animate-fade-in-up">
         {children}
       </div>
     </div>
