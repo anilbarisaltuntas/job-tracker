@@ -128,12 +128,12 @@ export default function Header() {
           
           {/* Bildirim Zili */}
           <Link href="/todos" className="relative text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
             {dueTasks.length > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white">
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
                 {dueTasks.length}
               </span>
             )}
@@ -146,7 +146,7 @@ export default function Header() {
             title={theme === 'dark' ? 'Light Mode Geç' : 'Dark Mode Geç'}
           >
             {theme === 'dark' ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="5"></circle>
                 <line x1="12" y1="1" x2="12" y2="3"></line>
                 <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -158,14 +158,14 @@ export default function Header() {
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
               </svg>
             )}
           </button>
 
           <div 
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg-surface)] border border-[var(--border)] text-[10px] font-semibold text-[var(--text-primary)]"
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-surface)] border border-[var(--border)] text-[12px] font-semibold text-[var(--text-primary)]"
             title={userEmail || ''}
           >
             {userEmail ? userEmail.charAt(0).toUpperCase() : 'U'}
@@ -173,7 +173,7 @@ export default function Header() {
           
           <button
             onClick={handleLogout}
-            className="text-[12px] font-medium text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+            className="text-[14px] font-medium text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
           >
             Çıkış
           </button>
