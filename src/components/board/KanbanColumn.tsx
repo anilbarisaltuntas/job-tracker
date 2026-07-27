@@ -33,7 +33,7 @@ export default function KanbanColumn({
     <div className="flex min-h-[150px] h-fit w-full flex-col bg-[var(--bg-column)] rounded-lg border border-transparent transition-colors hover:border-[var(--border)]">
       
       {/* Sütun başlığı */}
-      <div className="mb-2 flex items-center justify-between px-3 py-3">
+      <div className="m-2 mb-3 flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 shadow-sm">
         <div className="flex items-center gap-2">
           <span className="text-[15px] opacity-70 grayscale">{emoji}</span>
           <h2 className="text-[14px] font-semibold tracking-wide" style={{ color: 'var(--text-primary)' }}>{title}</h2>
