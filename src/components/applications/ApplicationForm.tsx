@@ -509,11 +509,7 @@ export default function ApplicationForm({
             )}
           </div>
 
-          {/* İlan Linki */}
-          <div>
-            <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>İş İlanı Linki</label>
-            <input name="job_url" type="url" value={formData.job_url} onChange={handleChange} placeholder="https://..." className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
-          </div>
+
 
           {/* Notlar */}
           <div>
