@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * LOGIN (GİRİŞ) SAYFASI
+ * LOGIN (GİRİŞ) SAYFASI - Modern Minimalizm
  */
 
 import { useState, useEffect } from 'react'
@@ -16,7 +16,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
 
-  // Sayfa yüklendiğinde localStorage'da kayıtlı email var mı kontrol et
   useEffect(() => {
     const savedEmail = localStorage.getItem('rememberedEmail')
     if (savedEmail) {
@@ -33,7 +32,6 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    // "Beni Hatırla" seçiliyse e-postayı kaydet, değilse sil
     if (rememberMe) {
       localStorage.setItem('rememberedEmail', email)
     } else {
@@ -55,35 +53,30 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      className="rounded-2xl p-8 shadow-2xl backdrop-blur-xl"
-      style={{
-        backgroundColor: 'var(--bg-elevated)',
-        border: '1px solid var(--border-strong)',
-      }}
-    >
+    <div className="minimal-panel p-10 max-w-sm w-full mx-auto" style={{ borderRadius: '12px' }}>
+
       {/* Logo / Başlık */}
       <div className="mb-8 text-center">
         <div
-          className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg"
+          className="mx-auto mb-5 flex h-10 w-10 items-center justify-center rounded-[8px]"
           style={{ backgroundColor: 'var(--logo-bg)' }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8" style={{ color: 'var(--logo-text)' }}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" style={{ color: 'var(--logo-text)' }}>
             <circle cx="12" cy="12" r="10"></circle>
             <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
           </svg>
         </div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          Başvuru Pusulası
+        <h1 className="text-[20px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+          Giriş Yap
         </h1>
-        <p className="mt-2 text-sm" style={{ color: 'var(--text-tertiary)' }}>
-          İş başvurularını takip et, organize ol
+        <p className="mt-1 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+          Kariyer yolculuğunuza devam edin
         </p>
       </div>
 
       {/* Hata mesajı */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-500">
+        <div className="mb-6 rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 px-4 py-3 text-[13px] text-red-600 dark:text-red-400">
           {error}
         </div>
       )}
@@ -93,8 +86,8 @@ export default function LoginPage() {
         <div>
           <label
             htmlFor="email"
-            className="mb-1.5 block text-sm font-medium"
-            style={{ color: 'var(--text-secondary)' }}
+            className="mb-1.5 block text-[12px] font-medium"
+            style={{ color: 'var(--text-primary)' }}
           >
             E-posta
           </label>
@@ -103,101 +96,86 @@ export default function LoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="ornek@email.com"
             required
-            className="w-full rounded-lg px-4 py-2.5 outline-none transition-colors"
+            className="w-full px-3 py-2.5 text-[13px] rounded-md transition-colors"
             style={{
               backgroundColor: 'var(--input-bg)',
               border: '1px solid var(--input-border)',
               color: 'var(--text-primary)',
             }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--input-focus)' }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--input-border)' }}
           />
         </div>
 
         <div>
           <label
             htmlFor="password"
-            className="mb-1.5 block text-sm font-medium"
-            style={{ color: 'var(--text-secondary)' }}
+            className="mb-1.5 flex items-center justify-between text-[12px] font-medium"
+            style={{ color: 'var(--text-primary)' }}
           >
-            Şifre
+            <span>Şifre</span>
+            <Link href="#" className="text-[11px] hover:underline" style={{ color: 'var(--text-tertiary)' }}>Şifremi unuttum</Link>
           </label>
           <input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
             required
             minLength={6}
-            className="w-full rounded-lg px-4 py-2.5 outline-none transition-colors"
+            className="w-full px-3 py-2.5 text-[13px] rounded-md transition-colors"
             style={{
               backgroundColor: 'var(--input-bg)',
               border: '1px solid var(--input-border)',
               color: 'var(--text-primary)',
             }}
-            onFocus={(e) => { e.currentTarget.style.borderColor = 'var(--input-focus)' }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = 'var(--input-border)' }}
           />
         </div>
 
         {/* Beni Hatırla Checkbox */}
-        <div className="flex items-center">
+        <div className="flex items-center pt-1">
           <input
             id="rememberMe"
             type="checkbox"
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+            className="h-3.5 w-3.5 rounded-sm border-gray-300 transition-colors cursor-pointer"
             style={{
               backgroundColor: 'var(--input-bg)',
-              borderColor: 'var(--input-border)'
+              border: '1px solid var(--input-border)',
             }}
           />
           <label
             htmlFor="rememberMe"
-            className="ml-2 block text-sm"
+            className="ml-2 block text-[12px] cursor-pointer select-none"
             style={{ color: 'var(--text-secondary)' }}
           >
-            E-posta adresimi hatırla
+            Beni hatırla
           </label>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-lg px-4 py-2.5 font-medium shadow-lg transition-all disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-6 w-full rounded-md px-4 py-2.5 text-[13px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
           style={{
             backgroundColor: 'var(--btn-primary-bg)',
             color: 'var(--btn-primary-text)',
+            border: '1px solid var(--border)',
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--btn-primary-hover)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--btn-primary-bg)' }}
         >
-          {loading ? (
-            <span className="flex items-center justify-center gap-2">
-              <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              Giriş yapılıyor...
-            </span>
-          ) : (
-            'Giriş Yap'
-          )}
+          {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
         </button>
       </form>
 
       {/* Kayıt linki */}
-      <p className="mt-6 text-center text-sm" style={{ color: 'var(--text-tertiary)' }}>
+      <p className="mt-6 text-center text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
         Hesabınız yok mu?{' '}
         <Link
           href="/register"
-          className="font-medium text-blue-500 transition-colors hover:text-blue-400"
+          className="font-medium hover:underline"
+          style={{ color: 'var(--text-primary)' }}
         >
-          Kayıt Ol
+          Kayıt olun
         </Link>
       </p>
     </div>

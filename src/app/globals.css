@@ -1,84 +1,94 @@
 @import "tailwindcss";
 
 /* ==============================
-   TEMA DEĞİŞKENLERİ
+   TEMA DEĞİŞKENLERİ — MODERN MİNİMAL (Stripe/Vercel Tarzı)
    ============================== */
 
-/* Dark Tema (Varsayılan) */
+/* Dark Tema (Çok Koyu Gri / Zarif) */
 :root,
 [data-theme="dark"] {
-  --bg:              #121214;
-  --bg-surface:      rgba(255, 255, 255, 0.04);
-  --bg-surface-hover: rgba(255, 255, 255, 0.08);
-  --bg-elevated:     #18181B;
-  --bg-header:       rgba(18, 18, 20, 0.8);
+  --bg:              #0A0A0A; /* Neredeyse Saf Siyah */
+  --bg-surface:      #141414; /* Çok Koyu Gri (Kartlar) */
+  --bg-surface-hover: #1A1A1A;
+  --bg-elevated:     #1A1A1A;
+  --bg-header:       rgba(10, 10, 10, 0.8); /* Çok hafif şeffaflık ile cam hissi */
+  --bg-column:       #0A0A0A; /* Sütunlar arkaplan ile aynı veya çok yakın */
 
-  --border:          rgba(255, 255, 255, 0.10);
-  --border-hover:    rgba(255, 255, 255, 0.20);
-  --border-strong:   rgba(255, 255, 255, 0.20);
+  --border:          #262626; /* Çok ince gri çizgi */
+  --border-hover:    #404040;
+  --border-strong:   #404040;
 
-  --text-primary:    rgba(255, 255, 255, 0.90);
-  --text-secondary:  rgba(255, 255, 255, 0.60);
-  --text-tertiary:   rgba(255, 255, 255, 0.40);
-  --text-inverted:   #000000;
+  --text-primary:    #F5F5F5;
+  --text-secondary:  #A3A3A3;
+  --text-tertiary:   #737373;
+  --text-inverted:   #0A0A0A;
 
-  --input-bg:        rgba(255, 255, 255, 0.05);
-  --input-border:    rgba(255, 255, 255, 0.10);
-  --input-focus:     rgba(255, 255, 255, 0.20);
+  --input-bg:        #0A0A0A;
+  --input-border:    #262626;
+  --input-focus:     #FFFFFF; /* Odakta temiz beyaz */
 
-  --badge-bg:        rgba(255, 255, 255, 0.10);
-  --badge-text:      rgba(255, 255, 255, 0.60);
+  --badge-bg:        #1A1A1A;
+  --badge-text:      #A3A3A3;
+
+  --accent:          #FFFFFF; /* Saf beyaz aksan (modern) */
+  --accent-secondary:#A3A3A3;
+  --accent-hover:    #E5E5E5;
+  --accent-subtle:   rgba(255, 255, 255, 0.1);
 
   --btn-primary-bg:  #FFFFFF;
   --btn-primary-text: #000000;
-  --btn-primary-hover: #E5E5E5;
 
   --logo-bg:         #FFFFFF;
   --logo-text:       #000000;
 
-  --glow-color:      rgba(0, 0, 0, 0.12);
-  --gradient-subtle: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 60%);
-
-  --scrollbar-thumb: rgba(255, 255, 255, 0.10);
-  --scrollbar-hover: rgba(255, 255, 255, 0.20);
+  --shadow-soft:     0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-hover:    0 8px 24px rgba(0, 0, 0, 0.7);
+  
+  --scrollbar-thumb: #262626;
+  --scrollbar-hover: #404040;
 }
 
-/* Light Tema */
+/* Light Tema (Saf Beyaz, Minimal) */
 [data-theme="light"] {
-  --bg:              #F5F5F5;
-  --bg-surface:      #FFFFFF;
-  --bg-surface-hover: #F0F0F0;
+  --bg:              #FAFAFA; /* Çok açık kırık beyaz (Stripe gibi) */
+  --bg-surface:      #FFFFFF; /* Saf beyaz kartlar */
+  --bg-surface-hover: #FAFAFA;
   --bg-elevated:     #FFFFFF;
-  --bg-header:       rgba(255, 255, 255, 0.7);
+  --bg-header:       rgba(255, 255, 255, 0.85);
+  --bg-column:       #F4F4F5; /* Sütunlar için çok hafif gri ton */
 
-  --border:          rgba(0, 0, 0, 0.08);
-  --border-hover:    rgba(0, 0, 0, 0.15);
-  --border-strong:   rgba(0, 0, 0, 0.12);
+  --border:          #E5E5E5;
+  --border-hover:    #D4D4D4;
+  --border-strong:   #D4D4D4;
 
-  --text-primary:    #111111;
-  --text-secondary:  #555555;
-  --text-tertiary:   #999999;
+  --text-primary:    #09090B; /* Koyu antrasit */
+  --text-secondary:  #71717A;
+  --text-tertiary:   #A1A1AA;
   --text-inverted:   #FFFFFF;
 
   --input-bg:        #FFFFFF;
-  --input-border:    rgba(0, 0, 0, 0.12);
-  --input-focus:     rgba(0, 0, 0, 0.25);
+  --input-border:    #E5E5E5;
+  --input-focus:     #09090B;
 
-  --badge-bg:        rgba(0, 0, 0, 0.06);
-  --badge-text:      #666666;
+  --badge-bg:        #F4F4F5;
+  --badge-text:      #71717A;
 
-  --btn-primary-bg:  #111111;
+  --accent:          #09090B; /* Koyu antrasit aksan */
+  --accent-secondary:#71717A;
+  --accent-hover:    #27272A;
+  --accent-subtle:   rgba(0, 0, 0, 0.05);
+
+  --btn-primary-bg:  #09090B;
   --btn-primary-text: #FFFFFF;
-  --btn-primary-hover: #333333;
 
-  --logo-bg:         #111111;
+  --logo-bg:         #09090B;
   --logo-text:       #FFFFFF;
 
-  --glow-color:      rgba(0, 0, 0, 0.06);
-  --gradient-subtle: radial-gradient(circle at 50% 0%, rgba(0,0,0,0.02) 0%, transparent 60%);
+  --shadow-soft:     0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 4px 16px -4px rgba(0, 0, 0, 0.02);
+  --shadow-hover:    0 10px 30px -4px rgba(0, 0, 0, 0.08);
 
-  --scrollbar-thumb: rgba(0, 0, 0, 0.12);
-  --scrollbar-hover: rgba(0, 0, 0, 0.25);
+  --scrollbar-thumb: #E5E5E5;
+  --scrollbar-hover: #D4D4D4;
 }
 
 /* ==============================
@@ -92,75 +102,70 @@
 }
 
 /* ==============================
-   GLOBAL STİLLER
+   GLOBAL STİLLER (MODERN MİNİMAL)
    ============================== */
 body {
   background-color: var(--bg);
   color: var(--text-primary);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), 'Inter', sans-serif;
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background-image: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Tema geçişlerinde pürüzsüz animasyon */
+/* Tüm geçişler ipeksi ve yavaş */
 *, *::before, *::after {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Animasyon olan elementlerde çakışmasın */
-[draggable="true"],
-input, textarea, select, button {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease, opacity 0.15s ease;
+/* ==============================
+   MİNİMAL YÜZEY UTILS
+   ============================== */
+.minimal-panel {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+  border-radius: 8px; /* Kibar köşe yuvarlamaları */
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+.minimal-panel:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-hover);
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+
+/* ==============================
+   FOCUS RING & SCROLLBAR
+   ============================== */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 2px var(--accent-subtle) !important;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--scrollbar-thumb);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--scrollbar-hover);
-}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
 
 /* =========================================
    TIPTAP RICH TEXT EDITOR STYLES
    ========================================= */
-.tiptap-editor {
-  line-height: 1.5;
-}
-
-.tiptap-editor p {
-  margin-bottom: 0.75em;
-}
-
-.tiptap-editor ul {
-  list-style-type: disc;
-  padding-left: 1.5rem;
-  margin-bottom: 0.75em;
-}
-
-.tiptap-editor ol {
-  list-style-type: decimal;
-  padding-left: 1.5rem;
-  margin-bottom: 0.75em;
-}
-
-.tiptap-editor strong {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-/* Placeholder stili */
+.tiptap-editor { line-height: 1.6; }
+.tiptap-editor p { margin-bottom: 0.75em; }
+.tiptap-editor ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75em; }
+.tiptap-editor ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75em; }
+.tiptap-editor strong { font-weight: 600; color: var(--text-primary); }
 .tiptap-editor p.is-editor-empty:first-child::before {
   color: var(--text-tertiary);
   content: attr(data-placeholder);
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+/* Header blur effect */
+.glass-header {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }

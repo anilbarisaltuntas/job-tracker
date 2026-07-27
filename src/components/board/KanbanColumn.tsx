@@ -1,20 +1,7 @@
 'use client'
 
 /**
- * KANBAN COLUMN — Bir Kanban Sütunu
- * 
- * Droppable → Bu alan kartların "bırakılabileceği" bir hedeftir.
- * İçinde ApplicationCard'ları listeler.
- * 
- * Props açıklaması:
- * - columnId: durum kodu (ör: 'applied_message_sent')
- * - title: Türkçe başlık (ör: 'Başvuruldu - Mesaj Atıldı')
- * - emoji: sütun ikonu
- * - color: üst çizgi rengi
- * - bgColor: arka plan rengi
- * - applications: bu sütundaki başvurular
- * - onCardClick: kart tıklanınca çağrılır
- * - onAddClick: "Ekle" butonuna tıklanınca çağrılır
+ * KANBAN COLUMN — Modern Minimalist Design
  */
 
 import { Droppable, Draggable } from '@hello-pangea/dnd'
@@ -37,22 +24,23 @@ export default function KanbanColumn({
   title,
   emoji,
   applications,
-  color = '#3B82F6',
+  color = '#2563EB',
   bgColor = '#EFF6FF',
   onCardClick,
   onAddClick,
 }: KanbanColumnProps) {
   return (
-    <div className="flex h-[400px] w-full flex-col">
+    <div className="flex h-[550px] w-full flex-col bg-[var(--bg-column)] rounded-lg border border-transparent transition-colors hover:border-[var(--border)]">
+      
       {/* Sütun başlığı */}
-      <div className="mb-3 flex items-center justify-between px-1">
+      <div className="mb-2 flex items-center justify-between px-3 py-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm">{emoji}</span>
-          <h2 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{title}</h2>
-          {/* Başvuru sayısı badge'i */}
+          <span className="text-[13px] opacity-70 grayscale">{emoji}</span>
+          <h2 className="text-[12px] font-medium tracking-wide" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+          
           <span
-            className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-xs font-medium"
-            style={{ backgroundColor: 'var(--badge-bg)', color: 'var(--badge-text)' }}
+            className="ml-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[var(--badge-bg)] px-1 text-[9px] font-medium"
+            style={{ color: 'var(--text-secondary)' }}
           >
             {applications.length}
           </span>
@@ -61,11 +49,13 @@ export default function KanbanColumn({
         {/* Yeni başvuru ekleme butonu */}
         <button
           onClick={onAddClick}
-          className="flex h-6 w-6 items-center justify-center rounded-md transition-colors"
-          style={{ color: 'var(--text-tertiary)' }}
+          className="flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
           title="Yeni başvuru ekle"
         >
-          +
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
         </button>
       </div>
 
@@ -75,44 +65,37 @@ export default function KanbanColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`flex-1 space-y-3 overflow-y-auto rounded-xl p-1 transition-colors ${
-              snapshot.isDraggingOver ? 'bg-white/[0.02]' : ''
+            className={`flex-1 space-y-2 overflow-y-auto px-2 py-1 transition-colors duration-200 rounded-b-lg ${
+              snapshot.isDraggingOver ? 'bg-[var(--badge-bg)]' : ''
             }`}
           >
-            {applications.map((app, index) => (
-              /*
-                DRAGGABLE — Sürüklenebilir Eleman
-                
-                draggableId → her kartın benzersiz kimliği
-                index → sütun içindeki sırası
-                
-                provided.draggableProps → sürükleme için gerekli özellikler
-                provided.dragHandleProps → "tutma noktası" (tüm karta uyguladık)
-              */
-              <Draggable key={app.id} draggableId={app.id} index={index}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    className={`transition-transform ${
-                      snapshot.isDragging ? 'rotate-2 scale-105' : ''
-                    }`}
-                  >
-                    <ApplicationCard
-                      application={app}
-                      onClick={() => onCardClick(app)}
-                    />
-                  </div>
-                )}
-              </Draggable>
-            ))}
+            <div className="animate-stagger">
+              {applications.map((app, index) => (
+                <Draggable key={app.id} draggableId={app.id} index={index}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className={`mb-2 transition-all ${
+                        snapshot.isDragging ? 'rotate-1 scale-102 z-50 opacity-90' : ''
+                      }`}
+                    >
+                      <ApplicationCard
+                        application={app}
+                        onClick={() => onCardClick(app)}
+                      />
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+            </div>
             {provided.placeholder}
 
             {/* Sütun boşken göster */}
             {applications.length === 0 && !snapshot.isDraggingOver && (
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Henüz başvuru yok</p>
+              <div className="flex h-24 flex-col items-center justify-center text-center mt-2">
+                <p className="text-[12px]" style={{ color: 'var(--text-tertiary)' }}>Burada başvuru yok</p>
               </div>
             )}
 
@@ -120,10 +103,14 @@ export default function KanbanColumn({
             {!snapshot.isDraggingOver && (
               <button
                 onClick={onAddClick}
-                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-medium transition-colors hover:bg-slate-500/10"
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-md py-2 text-[11px] font-medium transition-colors hover:bg-[var(--badge-bg)]"
                 style={{ color: 'var(--text-secondary)' }}
               >
-                + Başvuru Ekle
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Başvuru Ekle
               </button>
             )}
           </div>

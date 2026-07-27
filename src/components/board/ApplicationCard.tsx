@@ -1,12 +1,7 @@
 'use client'
 
 /**
- * APPLICATION CARD — Kanban Board'daki Başvuru Kartı
- * 
- * Her kart bir iş başvurusunu temsil eder.
- * Gösterdiği bilgiler: şirket adı, pozisyon, tarih, kaynak.
- * Tıklanınca detay modal'ı açılır.
- * Takip tarihi geçmişse kırmızı uyarı gösterir.
+ * APPLICATION CARD — Modern Minimalist Design
  */
 
 import { Application } from '@/lib/types'
@@ -20,55 +15,44 @@ export default function ApplicationCard({ application, onClick }: ApplicationCar
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer rounded-xl p-3 transition-all hover:-translate-y-0.5"
-      style={{
-        backgroundColor: 'var(--bg-surface)',
-        border: '1px solid var(--border)',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border-hover)'
-        e.currentTarget.style.backgroundColor = 'var(--bg-surface-hover)'
-        e.currentTarget.style.boxShadow = `0 8px 30px var(--glow-color)`
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'var(--border)'
-        e.currentTarget.style.backgroundColor = 'var(--bg-surface)'
-        e.currentTarget.style.boxShadow = 'none'
-      }}
+      className="group relative cursor-pointer minimal-panel p-3.5 transition-all duration-300"
     >
-
-
-      {/* Şirket adı */}
+      {/* Şirket Adı & İkon */}
       <div className="flex items-start justify-between">
-        <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+        <h3 className="text-[13px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
           {application.company_name}
         </h3>
+        
+        <span className="flex h-5 w-5 items-center justify-center rounded-[4px] bg-[var(--badge-bg)] text-[var(--text-tertiary)] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </span>
       </div>
 
       {/* Pozisyon */}
-      <p className="mt-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+      <p className="mt-1 text-[12px]" style={{ color: 'var(--text-tertiary)' }}>
         {application.position}
       </p>
 
-      {/* Metrik Rozetleri (Uyumluluk & Tarih) */}
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      {/* Metrik Rozetleri */}
+      <div className="mt-4 flex flex-wrap items-center gap-1.5">
         {application.match_level && (
-          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase ${
-            application.match_level === 'high' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
-            application.match_level === 'medium' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
-            'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'
+          <span className={`inline-flex items-center rounded-[4px] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide border ${
+            application.match_level === 'high' ? 'bg-[#ECFDF5] text-[#059669] border-[#A7F3D0] dark:bg-[#064E3B] dark:text-[#34D399] dark:border-[#065F46]' : 
+            application.match_level === 'medium' ? 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A] dark:bg-[#451A03] dark:text-[#FBBF24] dark:border-[#78350F]' : 
+            'bg-[#FEF2F2] text-[#DC2626] border-[#FECACA] dark:bg-[#7F1D1D] dark:text-[#F87171] dark:border-[#991B1B]'
           }`}>
-            {application.match_level === 'high' ? 'Yüksek Uyum' : application.match_level === 'medium' ? 'Orta Uyum' : 'Düşük Uyum'}
+            {application.match_level === 'high' ? 'Yüksek' : application.match_level === 'medium' ? 'Orta' : 'Düşük'}
           </span>
         )}
         
         {application.application_date && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-200 px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase text-slate-800 dark:bg-slate-700 dark:text-slate-100">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-              <path fillRule="evenodd" d="M5.25 2A1.75 1.75 0 003.5 3.75v12.5c0 .966.784 1.75 1.75 1.75h10.5A1.75 1.75 0 0017.5 16.25V3.75a1.75 1.75 0 00-1.75-1.75h-10.5zm.75 3a.75.75 0 011.5 0V6A.75.75 0 016 6V5zm4 0a.75.75 0 011.5 0V6a.75.75 0 01-1.5 0V5zm4 0a.75.75 0 011.5 0V6a.75.75 0 01-1.5 0V5zM4.5 8h11v7.75a.25.25 0 01-.25.25H4.75a.25.25 0 01-.25-.25V8z" clipRule="evenodd" />
-            </svg>
-            {new Date(application.application_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+          <span 
+            className="inline-flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide border border-[var(--border)]"
+            style={{ backgroundColor: 'var(--badge-bg)', color: 'var(--text-secondary)' }}
+          >
+            {new Date(application.application_date).toLocaleDateString('tr-TR', { day: '2-digit', month: 'short' })}
           </span>
         )}
       </div>

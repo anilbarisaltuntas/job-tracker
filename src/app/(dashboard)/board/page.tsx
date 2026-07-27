@@ -4,14 +4,7 @@ import KanbanBoard from '@/components/board/KanbanBoard'
 import Header from '@/components/layout/Header'
 
 /**
- * BOARD SAYFASI
- * 
- * Bu bir Server Component — sunucuda çalışır.
- * İşi: kullanıcının giriş yaptığını doğrula.
- * Asıl UI'ı Client Component olan KanbanBoard render eder.
- * 
- * Neden ayrı? Server Component'te auth kontrolü daha güvenli.
- * Client Component'te interaktif UI (sürükle-bırak, modal) yapabiliyoruz.
+ * BOARD SAYFASI (Modern Minimalizm)
  */
 export default async function BoardPage() {
   const supabase = await createClient()
@@ -22,21 +15,23 @@ export default async function BoardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-[var(--bg)]">
       <Header />
-      <main className="flex-1 overflow-y-auto p-6">
-        <div className="mb-8 pl-2">
-          <h2
-            className="text-2xl font-semibold tracking-tight"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Başvuru Takip Panosu
-          </h2>
-          <p className="mt-1 text-sm" style={{ color: 'var(--text-tertiary)' }}>
-            İş arayış sürecinizi sürükle-bırak yöntemiyle yönetin
-          </p>
+      <main className="relative z-10 flex-1 overflow-y-auto p-10">
+        <div className="mb-8 animate-stagger max-w-[1400px] mx-auto flex items-center justify-between">
+          <div>
+            <h2 className="text-[20px] font-medium tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              Takip Panosu
+            </h2>
+            <p className="mt-1 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+              Tüm başvuru süreçleriniz tek bir yerde.
+            </p>
+          </div>
         </div>
-        <KanbanBoard />
+        
+        <div className="max-w-[1400px] mx-auto">
+          <KanbanBoard />
+        </div>
       </main>
     </div>
   )
