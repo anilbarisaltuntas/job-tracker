@@ -63,13 +63,22 @@ export default function ApplicationDetail({
 
   const handleToggleTaskStatus = async (task: TodoTask) => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+    const completedAt = newStatus === 'completed' ? new Date().toISOString() : null
+
     // Optimistic update
-    setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus } : t))
+    setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus, completed_at: completedAt } : t))
     
-    await supabase
+    const { error } = await supabase
       .from('todo_tasks')
-      .update({ status: newStatus })
+      .update({ status: newStatus, completed_at: completedAt })
       .eq('id', task.id)
+
+    if (error) {
+      await supabase
+        .from('todo_tasks')
+        .update({ status: newStatus })
+        .eq('id', task.id)
+    }
   }
 
   const pendingTasks = tasks.filter(t => t.status !== 'completed')
@@ -360,18 +369,31 @@ export default function ApplicationDetail({
                   <p className="text-xs italic text-slate-400">Henüz tamamlanan görev yok.</p>
                 ) : (
                   completedTasks.map(task => (
-                    <div key={task.id} className="flex items-center justify-between rounded-xl p-3 border opacity-60 grayscale" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => handleToggleTaskStatus(task)}
-                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-blue-500 bg-blue-500 text-white transition-colors"
-                        >
-                          ✓
-                        </button>
-                        <span className="text-xs font-medium line-through" style={{ color: 'var(--text-primary)' }}>
-                          {task.title}
-                        </span>
+                    <div key={task.id} className="flex flex-col gap-1 rounded-xl p-3 border opacity-75" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <button 
+                            onClick={() => handleToggleTaskStatus(task)}
+                            className="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-emerald-500 bg-emerald-500 text-white transition-colors"
+                          >
+                            ✓
+                          </button>
+                          <span className="text-xs font-medium line-through" style={{ color: 'var(--text-primary)' }}>
+                            {task.title}
+                          </span>
+                        </div>
                       </div>
+                      {(task.completed_at || task.updated_at) && (
+                        <div className="ml-8 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                          ✅ Tamamlanma Saati: {new Date(task.completed_at || task.updated_at).toLocaleString('tr-TR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}

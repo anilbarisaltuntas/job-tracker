@@ -45,13 +45,22 @@ export default function TodosPage() {
 
   const handleToggleStatus = async (task: TodoTask) => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+    const completedAt = newStatus === 'completed' ? new Date().toISOString() : null
+
     // Update local state first for instant UI response
-    setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus } : t))
+    setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus, completed_at: completedAt } : t))
     
-    await supabase
+    const { error } = await supabase
       .from('todo_tasks')
-      .update({ status: newStatus })
+      .update({ status: newStatus, completed_at: completedAt })
       .eq('id', task.id)
+
+    if (error) {
+      await supabase
+        .from('todo_tasks')
+        .update({ status: newStatus })
+        .eq('id', task.id)
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -132,6 +141,18 @@ export default function TodosPage() {
               </span>
             )}
             
+            {isCompleted && (task.completed_at || task.updated_at) && (
+              <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+                ✅ Tamamlanma Saati: {new Date(task.completed_at || task.updated_at).toLocaleString('tr-TR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            )}
+
             {task.application_id && task.application && (
               <Link 
                 href="/board" 
