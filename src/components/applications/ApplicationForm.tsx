@@ -83,6 +83,37 @@ export default function ApplicationForm({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cvFile, setCvFile] = useState<File | null>(null) // Seçilen PDF dosyası
+  const [isParsing, setIsParsing] = useState(false)
+
+  // Linkten otomatik ilan bilgilerini çekme
+  const handleAutoFill = async () => {
+    if (!formData.job_url) {
+      alert('Lütfen önce ilan linkini girin!')
+      return
+    }
+
+    try {
+      setIsParsing(true)
+      const res = await fetch(`/api/parse-job?url=${encodeURIComponent(formData.job_url)}`)
+      const result = await res.json()
+
+      if (res.ok && result.success) {
+        setFormData(prev => ({
+          ...prev,
+          company_name: result.data.company_name || prev.company_name,
+          position: result.data.position || prev.position,
+          application_date: result.data.posted_date || prev.application_date,
+        }))
+      } else {
+        alert(result.error || 'Bilgiler çekilemedi. Manuel girebilirsiniz.')
+      }
+    } catch (error) {
+      console.error(error)
+      alert('Bağlantı hatası oluştu.')
+    } finally {
+      setIsParsing(false)
+    }
+  }
 
   // Genel form değişiklik handler'ı
   const handleChange = (
@@ -278,7 +309,25 @@ export default function ApplicationForm({
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>İlan Linki</label>
-              <input name="job_url" type="url" value={formData.job_url} onChange={handleChange} placeholder="https://..." className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
+              <div className="flex gap-2">
+                <input 
+                  name="job_url" 
+                  type="url" 
+                  value={formData.job_url} 
+                  onChange={handleChange} 
+                  placeholder="https://..." 
+                  className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" 
+                  style={inputStyle} 
+                />
+                <button 
+                  type="button" 
+                  onClick={handleAutoFill}
+                  disabled={isParsing || !formData.job_url}
+                  className="shrink-0 rounded-xl bg-blue-500/10 px-3 py-2 text-xs font-medium text-blue-500 transition-colors hover:bg-blue-500 hover:text-white disabled:opacity-50"
+                >
+                  {isParsing ? '⏳ Bekleyin...' : '✨ Bilgileri Çek'}
+                </button>
+              </div>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Uyumluluğum (Match)</label>
