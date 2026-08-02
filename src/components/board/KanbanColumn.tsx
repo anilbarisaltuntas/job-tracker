@@ -20,7 +20,7 @@ interface KanbanColumnProps {
   onAddClick: () => void
 }
 
-const INITIAL_SHOW_COUNT = 5
+const INITIAL_SHOW_COUNT = 3
 
 export default function KanbanColumn({
   columnId,
