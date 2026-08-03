@@ -1,94 +1,94 @@
 @import "tailwindcss";
 
 /* ==============================
-   TEMA DEĞİŞKENLERİ — MODERN MİNİMAL (Stripe/Vercel Tarzı)
+   TEMA DEĞİŞKENLERİ — YENİ NESİL MODERN SAAS (Linear / Raycast / Supabase)
    ============================== */
 
-/* Dark Tema (Çok Koyu Gri / Zarif) */
+/* Dark Tema (Derin Gece Antrasiti & Indigo Dokunuşlar) */
 :root,
 [data-theme="dark"] {
-  --bg:              #0A0A0A; /* Neredeyse Saf Siyah */
-  --bg-surface:      #141414; /* Çok Koyu Gri (Kartlar) */
-  --bg-surface-hover: #1A1A1A;
-  --bg-elevated:     #1A1A1A;
-  --bg-header:       rgba(10, 10, 10, 0.8); /* Çok hafif şeffaflık ile cam hissi */
-  --bg-column:       #0A0A0A; /* Sütunlar arkaplan ile aynı veya çok yakın */
+  --bg:              #0B0F17; /* Derin Obsidian / Gece Mavisi */
+  --bg-surface:      #131B2E; /* Kartlar ve Paneller */
+  --bg-surface-hover: #1E293B;
+  --bg-elevated:     #131B2E;
+  --bg-header:       rgba(11, 15, 23, 0.85);
+  --bg-column:       #0D1320;
 
-  --border:          #262626; /* Çok ince gri çizgi */
-  --border-hover:    #404040;
-  --border-strong:   #404040;
+  --border:          rgba(51, 65, 85, 0.6);
+  --border-hover:    #6366F1;
+  --border-strong:   #475569;
 
-  --text-primary:    #F5F5F5;
-  --text-secondary:  #A3A3A3;
-  --text-tertiary:   #737373;
-  --text-inverted:   #0A0A0A;
+  --text-primary:    #F8FAFC;
+  --text-secondary:  #94A3B8;
+  --text-tertiary:   #64748B;
+  --text-inverted:   #0B0F17;
 
-  --input-bg:        #0A0A0A;
-  --input-border:    #262626;
-  --input-focus:     #FFFFFF; /* Odakta temiz beyaz */
+  --input-bg:        #0B0F17;
+  --input-border:    #334155;
+  --input-focus:     #818CF8;
 
-  --badge-bg:        #1A1A1A;
-  --badge-text:      #A3A3A3;
+  --badge-bg:        #1E1B4B;
+  --badge-text:      #C7D2FE;
 
-  --accent:          #FFFFFF; /* Saf beyaz aksan (modern) */
-  --accent-secondary:#A3A3A3;
-  --accent-hover:    #E5E5E5;
-  --accent-subtle:   rgba(255, 255, 255, 0.1);
+  --accent:          #6366F1; /* Indigo 500 */
+  --accent-secondary:#818CF8;
+  --accent-hover:    #4F46E5;
+  --accent-subtle:   rgba(99, 102, 241, 0.15);
 
-  --btn-primary-bg:  #FFFFFF;
-  --btn-primary-text: #000000;
+  --btn-primary-bg:  #6366F1;
+  --btn-primary-text: #FFFFFF;
 
-  --logo-bg:         #FFFFFF;
-  --logo-text:       #000000;
+  --logo-bg:         linear-gradient(135deg, #6366F1, #8B5CF6);
+  --logo-text:       #FFFFFF;
 
-  --shadow-soft:     0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-hover:    0 8px 24px rgba(0, 0, 0, 0.7);
-  
-  --scrollbar-thumb: #262626;
-  --scrollbar-hover: #404040;
+  --shadow-soft:     0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-hover:    0 12px 30px -4px rgba(99, 102, 241, 0.25), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+
+  --scrollbar-thumb: #334155;
+  --scrollbar-hover: #475569;
 }
 
-/* Light Tema (Saf Beyaz, Minimal) */
+/* Light Tema (Ferah Kırık Beyaz & Temiz İndigo) */
 [data-theme="light"] {
-  --bg:              #FAFAFA; /* Çok açık kırık beyaz (Stripe gibi) */
-  --bg-surface:      #FFFFFF; /* Saf beyaz kartlar */
-  --bg-surface-hover: #FAFAFA;
+  --bg:              #F8FAFC; /* Slate 50 */
+  --bg-surface:      #FFFFFF;
+  --bg-surface-hover: #F1F5F9;
   --bg-elevated:     #FFFFFF;
-  --bg-header:       rgba(255, 255, 255, 0.85);
-  --bg-column:       #F4F4F5; /* Sütunlar için çok hafif gri ton */
+  --bg-header:       rgba(248, 250, 252, 0.85);
+  --bg-column:       #F1F5F9;
 
-  --border:          #E5E5E5;
-  --border-hover:    #D4D4D4;
-  --border-strong:   #D4D4D4;
+  --border:          #E2E8F0;
+  --border-hover:    #CBD5E1;
+  --border-strong:   #CBD5E1;
 
-  --text-primary:    #09090B; /* Koyu antrasit */
-  --text-secondary:  #71717A;
-  --text-tertiary:   #A1A1AA;
+  --text-primary:    #0F172A;
+  --text-secondary:  #475569;
+  --text-tertiary:   #94A3B8;
   --text-inverted:   #FFFFFF;
 
   --input-bg:        #FFFFFF;
-  --input-border:    #E5E5E5;
-  --input-focus:     #09090B;
+  --input-border:    #E2E8F0;
+  --input-focus:     #4F46E5;
 
-  --badge-bg:        #F4F4F5;
-  --badge-text:      #71717A;
+  --badge-bg:        #EEF2FF;
+  --badge-text:      #4338CA;
 
-  --accent:          #09090B; /* Koyu antrasit aksan */
-  --accent-secondary:#71717A;
-  --accent-hover:    #27272A;
-  --accent-subtle:   rgba(0, 0, 0, 0.05);
+  --accent:          #4F46E5;
+  --accent-secondary:#6366F1;
+  --accent-hover:    #4338CA;
+  --accent-subtle:   rgba(79, 70, 229, 0.08);
 
-  --btn-primary-bg:  #09090B;
+  --btn-primary-bg:  #4F46E5;
   --btn-primary-text: #FFFFFF;
 
-  --logo-bg:         #09090B;
+  --logo-bg:         linear-gradient(135deg, #4F46E5, #7C3AED);
   --logo-text:       #FFFFFF;
 
-  --shadow-soft:     0 2px 8px -2px rgba(0, 0, 0, 0.05), 0 4px 16px -4px rgba(0, 0, 0, 0.02);
-  --shadow-hover:    0 10px 30px -4px rgba(0, 0, 0, 0.08);
+  --shadow-soft:     0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.03);
+  --shadow-hover:    0 10px 25px -3px rgba(79, 70, 229, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
 
-  --scrollbar-thumb: #E5E5E5;
-  --scrollbar-hover: #D4D4D4;
+  --scrollbar-thumb: #CBD5E1;
+  --scrollbar-hover: #94A3B8;
 }
 
 /* ==============================
@@ -102,70 +102,58 @@
 }
 
 /* ==============================
-   GLOBAL STİLLER (MODERN MİNİMAL)
+   GLOBAL STİLLER
    ============================== */
 body {
   background-color: var(--bg);
   color: var(--text-primary);
-  font-family: var(--font-sans), 'Inter', sans-serif;
+  font-family: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
-  background-image: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Tüm geçişler ipeksi ve yavaş */
+/* Koyu modda arkada çok tatlı ortam ışığı yansıması */
+[data-theme="dark"] body {
+  background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+}
+
+/* Tüm geçişler akıcı ve ipeksi */
 *, *::before, *::after {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* ==============================
-   MİNİMAL YÜZEY UTILS
+   MODERN SAAS UTILITIES
    ============================== */
-.minimal-panel {
+.modern-card {
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-soft);
-  border-radius: 8px; /* Kibar köşe yuvarlamaları */
+  border-radius: 12px;
 }
 
-.minimal-panel:hover {
+.modern-card:hover {
   box-shadow: var(--shadow-hover);
-  border-color: var(--border-hover);
+  border-color: var(--accent-secondary);
+  transform: translateY(-2px);
 }
 
-/* ==============================
-   FOCUS RING & SCROLLBAR
-   ============================== */
+/* Header blur efekti */
+.glass-header {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+
+/* INPUT FOCUS */
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 2px var(--accent-subtle) !important;
-}
-
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
-
-/* =========================================
-   TIPTAP RICH TEXT EDITOR STYLES
-   ========================================= */
-.tiptap-editor { line-height: 1.6; }
-.tiptap-editor p { margin-bottom: 0.75em; }
-.tiptap-editor ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75em; }
-.tiptap-editor ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75em; }
-.tiptap-editor strong { font-weight: 600; color: var(--text-primary); }
-.tiptap-editor p.is-editor-empty:first-child::before {
-  color: var(--text-tertiary);
-  content: attr(data-placeholder);
-  float: left;
-  height: 0;
-  pointer-events: none;
-}
-
-/* Header blur effect */
-.glass-header {
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 0 0 3px var(--accent-subtle) !important;
 }

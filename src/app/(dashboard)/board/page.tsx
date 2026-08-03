@@ -4,7 +4,7 @@ import KanbanBoard from '@/components/board/KanbanBoard'
 import Header from '@/components/layout/Header'
 
 /**
- * BOARD SAYFASI (Modern Minimalizm)
+ * BOARD SAYFASI (Modern SaaS)
  */
 export default async function BoardPage() {
   const supabase = await createClient()
@@ -17,14 +17,14 @@ export default async function BoardPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg)]">
       <Header />
-      <main className="relative z-10 flex-1 overflow-y-auto px-6 py-8 w-full">
-        <div className="mb-8 animate-stagger w-full flex items-center justify-between">
+      <main className="relative z-10 flex-1 overflow-y-auto px-6 py-6 w-full">
+        <div className="mb-6 animate-stagger w-full flex items-center justify-between">
           <div>
-            <h2 className="text-[24px] font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
               Takip Panosu
             </h2>
-            <p className="mt-1 text-[15px]" style={{ color: 'var(--text-secondary)' }}>
-              Tüm başvuru süreçleriniz tek bir yerde.
+            <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
+              Kariyer serüveninizdeki tüm başvuru süreçlerini tek bir yerden yönetin.
             </p>
           </div>
         </div>
