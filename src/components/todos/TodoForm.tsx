@@ -104,9 +104,13 @@ export default function TodoForm({ editingTodo, preselectedApplicationId, onClos
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div 
+      onClick={onClose} 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto"
+    >
       <div 
-        className="w-full max-w-md overflow-hidden rounded-2xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md overflow-hidden rounded-2xl shadow-2xl my-auto"
         style={{ backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}
       >
         <div className="flex items-center justify-between border-b px-6 py-4" style={{ borderColor: 'var(--border)' }}>

@@ -105,9 +105,13 @@ export default function ApplicationDetail({
   const contacts = application.contacts || []
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+    <div 
+      onClick={onClose} 
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto"
+    >
       <div
-        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl shadow-2xl my-auto"
         style={{
           backgroundColor: 'var(--bg-elevated)',
           border: '1px solid var(--border-strong)',
