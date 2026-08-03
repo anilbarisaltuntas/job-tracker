@@ -106,13 +106,13 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all ${
                     isActive
                       ? 'bg-[var(--bg-surface)] text-[var(--accent)] shadow-xs border border-[var(--border)]'
                       : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface-hover)]'
                   }`}
                 >
-                  <span className="text-[13px]">{item.emoji}</span>
+                  <span className="text-base">{item.emoji}</span>
                   <span>{item.label}</span>
                 </Link>
               )
