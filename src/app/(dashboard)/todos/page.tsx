@@ -45,20 +45,20 @@ export default function TodosPage() {
 
   const handleToggleStatus = async (task: TodoTask) => {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed'
-    const completedAt = newStatus === 'completed' ? new Date().toISOString() : null
+    const completedAt = newStatus === 'completed' ? (task.completed_at || new Date().toISOString()) : null
 
     // Update local state first for instant UI response
     setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus, completed_at: completedAt } : t))
     
     const { error } = await supabase
       .from('todo_tasks')
-      .update({ status: newStatus, completed_at: completedAt })
+      .update({ status: newStatus, completed_at: completedAt, updated_at: new Date().toISOString() })
       .eq('id', task.id)
 
     if (error) {
       await supabase
         .from('todo_tasks')
-        .update({ status: newStatus })
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', task.id)
     }
   }

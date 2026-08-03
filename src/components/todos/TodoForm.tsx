@@ -65,10 +65,16 @@ export default function TodoForm({ editingTodo, preselectedApplicationId, onClos
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
+    const completedAt = formData.status === 'completed'
+      ? (editingTodo?.completed_at || new Date().toISOString())
+      : null
+
     const payload = {
       ...formData,
       application_id: formData.application_id || null, // convert empty string to null
       due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
+      completed_at: completedAt,
+      updated_at: new Date().toISOString(),
       user_id: user.id
     }
 
@@ -78,13 +84,21 @@ export default function TodoForm({ editingTodo, preselectedApplicationId, onClos
         .update(payload)
         .eq('id', editingTodo.id)
       
-      if (!error) onSave()
+      if (error) {
+        const { completed_at, ...fallbackPayload } = payload
+        await supabase.from('todo_tasks').update(fallbackPayload).eq('id', editingTodo.id)
+      }
+      onSave()
     } else {
       const { error } = await supabase
         .from('todo_tasks')
         .insert([payload])
       
-      if (!error) onSave()
+      if (error) {
+        const { completed_at, ...fallbackPayload } = payload
+        await supabase.from('todo_tasks').insert([fallbackPayload])
+      }
+      onSave()
     }
     setLoading(false)
   }
