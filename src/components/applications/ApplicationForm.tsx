@@ -558,6 +558,17 @@ export default function ApplicationForm({
                     </div>
                   </div>
                 ))}
+
+                <div className="mt-3 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={addContact}
+                    className="flex items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-3.5 py-2 text-xs font-bold text-[var(--accent)] hover:bg-[var(--badge-bg)] transition-colors shadow-2xs"
+                  >
+                    <span>+</span>
+                    <span>Bir İletişim Kişisi Daha Ekle</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>
