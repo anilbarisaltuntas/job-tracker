@@ -54,7 +54,7 @@ export default function KanbanBoard() {
     const { data, error } = await supabase
       .from('applications')
       .select('*, contacts(*)')
-      .order('kanban_order', { ascending: true })
+      .order('created_at', { ascending: false })
 
     if (error) {
       console.error('Başvurular yüklenirken hata:', error)
@@ -291,7 +291,7 @@ export default function KanbanBoard() {
               // Bu sütuna ait başvuruları filtrele
               const columnApps = filteredApplications
                 .filter(app => app.status === column.id)
-                .sort((a, b) => a.kanban_order - b.kanban_order)
+                .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
 
               return (
                 <KanbanColumn
