@@ -82,7 +82,13 @@ export default function ApplicationDetail({
   }
 
   const pendingTasks = tasks.filter(t => t.status !== 'completed')
-  const completedTasks = tasks.filter(t => t.status === 'completed')
+  const completedTasks = tasks
+    .filter(t => t.status === 'completed')
+    .sort((a, b) => {
+      const timeA = new Date(a.completed_at || a.updated_at || a.created_at).getTime()
+      const timeB = new Date(b.completed_at || b.updated_at || b.created_at).getTime()
+      return timeB - timeA
+    })
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '—'
