@@ -6,6 +6,7 @@ import { TodoTask } from '@/lib/types'
 import Header from '@/components/layout/Header'
 import TodoForm from '@/components/todos/TodoForm'
 import Link from 'next/link'
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 
 const PRIORITY_STYLES = {
   low: { label: 'Düşük', color: 'text-green-600 bg-green-500/10' },
@@ -22,6 +23,8 @@ const CATEGORY_LABELS = {
 
 export default function TodosPage() {
   const [tasks, setTasks] = useState<TodoTask[]>([])
+  const [pendingTasks, setPendingTasks] = useState<TodoTask[]>([])
+  const [completedTasks, setCompletedTasks] = useState<TodoTask[]>([])
   const [loading, setLoading] = useState(true)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TodoTask | null>(null)
@@ -35,7 +38,39 @@ export default function TodosPage() {
       .order('due_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
     
-    if (data && !error) setTasks(data)
+    if (data && !error) {
+      setTasks(data)
+
+      const pending = data.filter(t => t.status !== 'completed')
+      const completed = data
+        .filter(t => t.status === 'completed')
+        .sort((a, b) => {
+          const timeA = new Date(a.completed_at || a.updated_at || a.created_at).getTime()
+          const timeB = new Date(b.completed_at || b.updated_at || b.created_at).getTime()
+          return timeB - timeA
+        })
+
+      // Yerel sürükle-bırak sıralama verisini al
+      const savedOrderRaw = localStorage.getItem('todo_pending_order')
+      if (savedOrderRaw) {
+        try {
+          const savedOrder: string[] = JSON.parse(savedOrderRaw)
+          pending.sort((a, b) => {
+            const idxA = savedOrder.indexOf(a.id)
+            const idxB = savedOrder.indexOf(b.id)
+            if (idxA === -1 && idxB === -1) return 0
+            if (idxA === -1) return 1
+            if (idxB === -1) return -1
+            return idxA - idxB
+          })
+        } catch (e) {
+          // varsayılan sıralamada kalsın
+        }
+      }
+
+      setPendingTasks(pending)
+      setCompletedTasks(completed)
+    }
     setLoading(false)
   }
 
@@ -44,11 +79,22 @@ export default function TodosPage() {
   }, [])
 
   const handleToggleStatus = async (task: TodoTask) => {
-    const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+    const newStatus: TodoTask['status'] = task.status === 'completed' ? 'pending' : 'completed'
     const completedAt = newStatus === 'completed' ? (task.completed_at || new Date().toISOString()) : null
 
-    // Update local state first for instant UI response
-    setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus, completed_at: completedAt } : t))
+    // Anlık arayüz güncellemesi
+    const updatedTasks = tasks.map(t => t.id === task.id ? { ...t, status: newStatus, completed_at: completedAt } : t)
+    setTasks(updatedTasks)
+
+    if (newStatus === 'completed') {
+      const updatedTask: TodoTask = { ...task, status: newStatus, completed_at: completedAt }
+      setPendingTasks(prev => prev.filter(t => t.id !== task.id))
+      setCompletedTasks(prev => [updatedTask, ...prev])
+    } else {
+      const updatedTask: TodoTask = { ...task, status: newStatus, completed_at: null }
+      setCompletedTasks(prev => prev.filter(t => t.id !== task.id))
+      setPendingTasks(prev => [...prev, updatedTask])
+    }
     
     const { error } = await supabase
       .from('todo_tasks')
@@ -66,6 +112,8 @@ export default function TodosPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Görevi silmek istediğinize emin misiniz?')) return
     setTasks(tasks.filter(t => t.id !== id))
+    setPendingTasks(pendingTasks.filter(t => t.id !== id))
+    setCompletedTasks(completedTasks.filter(t => t.id !== id))
     await supabase.from('todo_tasks').delete().eq('id', id)
   }
 
@@ -79,29 +127,58 @@ export default function TodosPage() {
     fetchTasks()
   }
 
-  const priorityOrder = { high: 1, medium: 2, low: 3 }
-  const pendingTasks = tasks
-    .filter(t => t.status !== 'completed')
-    .sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority])
-  const completedTasks = tasks
-    .filter(t => t.status === 'completed')
-    .sort((a, b) => {
-      const timeA = new Date(a.completed_at || a.updated_at || a.created_at).getTime()
-      const timeB = new Date(b.completed_at || b.updated_at || b.created_at).getTime()
-      return timeB - timeA
-    })
+  // Sürükle - Bırak İşleyicisi
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return
+    const { source, destination } = result
+    if (source.index === destination.index) return
 
-  const TaskRow = ({ task }: { task: TodoTask }) => {
+    if (source.droppableId === 'pending-tasks') {
+      const items = Array.from(pendingTasks)
+      const [reorderedItem] = items.splice(source.index, 1)
+      items.splice(destination.index, 0, reorderedItem)
+
+      setPendingTasks(items)
+
+      // Sıralama ID listesini kaydedelim
+      const idOrder = items.map(t => t.id)
+      localStorage.setItem('todo_pending_order', JSON.stringify(idOrder))
+    } else if (source.droppableId === 'completed-tasks') {
+      const items = Array.from(completedTasks)
+      const [reorderedItem] = items.splice(source.index, 1)
+      items.splice(destination.index, 0, reorderedItem)
+
+      setCompletedTasks(items)
+    }
+  }
+
+  const TaskRow = ({ task, dragHandleProps }: { task: TodoTask; dragHandleProps?: any }) => {
     const isCompleted = task.status === 'completed'
     const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !isCompleted
 
     return (
       <div 
-        className={`group flex items-start gap-3 rounded-xl transition-all border p-3 hover:shadow-md ${
-          isCompleted ? 'opacity-50 grayscale-[30%]' : ''
+        className={`group flex items-start gap-2.5 rounded-xl transition-all border p-3 hover:shadow-md ${
+          isCompleted ? 'opacity-60 grayscale-[20%]' : ''
         }`}
         style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}
       >
+        {/* Sürükleme Tutamağı (Drag Handle) */}
+        <div
+          {...dragHandleProps}
+          className="flex h-7 w-5 shrink-0 cursor-grab items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] active:cursor-grabbing"
+          title="Görevin sırasını değiştirmek için sürükleyin"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="9" cy="5" r="1"></circle>
+            <circle cx="15" cy="5" r="1"></circle>
+            <circle cx="9" cy="12" r="1"></circle>
+            <circle cx="15" cy="12" r="1"></circle>
+            <circle cx="9" cy="19" r="1"></circle>
+            <circle cx="15" cy="19" r="1"></circle>
+          </svg>
+        </div>
+
         {/* Checkbox */}
         <button 
           onClick={() => handleToggleStatus(task)}
@@ -111,7 +188,7 @@ export default function TodosPage() {
               : 'h-5 w-5 border-2 border-slate-300 hover:border-emerald-400'
           }`}
         >
-          {isCompleted && <span className="text-[12px]">✓</span>}
+          {isCompleted && <span className="text-[12px] font-bold">✓</span>}
         </button>
 
         {/* İçerik */}
@@ -175,7 +252,7 @@ export default function TodosPage() {
           {!isCompleted && (
             <button 
               onClick={() => openForm(task)}
-              className="rounded p-1 text-blue-500 hover:bg-blue-500/10 text-xs"
+              className="rounded p-1 text-blue-500 hover:bg-blue-500/10 text-xs font-bold"
               title="Düzenle"
             >
               ✎
@@ -183,7 +260,7 @@ export default function TodosPage() {
           )}
           <button 
             onClick={() => handleDelete(task.id)}
-            className="rounded p-1 text-red-500 hover:bg-red-500/10 text-xs"
+            className="rounded p-1 text-red-500 hover:bg-red-500/10 text-xs font-bold"
             title="Sil"
           >
             ✕
@@ -205,8 +282,8 @@ export default function TodosPage() {
               <h2 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
                 Görevler
               </h2>
-              <p className="mt-1 text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                İş arama sürecinizdeki işlerinizi planlayın ve takip edin.
+              <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
+                Görevlerinizi sürükleyip bırakarak dilediğiniz sırada düzenleyin.
               </p>
             </div>
             
@@ -224,53 +301,109 @@ export default function TodosPage() {
               Görevler yükleniyor...
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              
-              {/* Bekleyenler (Sol Taraf) */}
-              <section className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                    Yapılacaklar
-                  </h3>
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                    {pendingTasks.length}
-                  </span>
-                </div>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
                 
-                {pendingTasks.length === 0 ? (
-                  <div className="rounded-xl border border-dashed p-6 text-center text-sm italic text-slate-400" style={{ borderColor: 'var(--border)' }}>
-                    Henüz hiç yapılacak göreviniz yok.
+                {/* Bekleyenler (Sol Taraf) */}
+                <section className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                        Yapılacaklar
+                      </h3>
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                        {pendingTasks.length}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">⋮⋮ Sürükleyerek Sırala</span>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {pendingTasks.map(task => <TaskRow key={task.id} task={task} />)}
-                  </div>
-                )}
-              </section>
+                  
+                  {pendingTasks.length === 0 ? (
+                    <div className="rounded-xl border border-dashed p-6 text-center text-sm italic text-slate-400" style={{ borderColor: 'var(--border)' }}>
+                      Henüz hiç yapılacak göreviniz yok.
+                    </div>
+                  ) : (
+                    <Droppable droppableId="pending-tasks">
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="space-y-3"
+                        >
+                          {pendingTasks.map((task, index) => (
+                            <Draggable key={task.id} draggableId={task.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  className={`transition-transform ${snapshot.isDragging ? 'z-50 opacity-90 scale-[1.02]' : ''}`}
+                                >
+                                  <TaskRow
+                                    task={task}
+                                    dragHandleProps={provided.dragHandleProps}
+                                  />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  )}
+                </section>
 
-              {/* Tamamlananlar (Sağ Taraf) */}
-              <section className="flex flex-col gap-4">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                    Tamamlananlar
-                  </h3>
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                    {completedTasks.length}
-                  </span>
-                </div>
-                
-                {completedTasks.length === 0 ? (
-                  <div className="rounded-xl border border-dashed p-6 text-center text-sm italic text-slate-400" style={{ borderColor: 'var(--border)' }}>
-                    Henüz tamamlanan görev yok.
+                {/* Tamamlananlar (Sağ Taraf) */}
+                <section className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
+                        Tamamlananlar
+                      </h3>
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                        {completedTasks.length}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-[var(--text-tertiary)]">⋮⋮ Sürükleyerek Sırala</span>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {completedTasks.map(task => <TaskRow key={task.id} task={task} />)}
-                  </div>
-                )}
-              </section>
+                  
+                  {completedTasks.length === 0 ? (
+                    <div className="rounded-xl border border-dashed p-6 text-center text-sm italic text-slate-400" style={{ borderColor: 'var(--border)' }}>
+                      Henüz tamamlanan görev yok.
+                    </div>
+                  ) : (
+                    <Droppable droppableId="completed-tasks">
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className="space-y-3"
+                        >
+                          {completedTasks.map((task, index) => (
+                            <Draggable key={task.id} draggableId={task.id} index={index}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  className={`transition-transform ${snapshot.isDragging ? 'z-50 opacity-90 scale-[1.02]' : ''}`}
+                                >
+                                  <TaskRow
+                                    task={task}
+                                    dragHandleProps={provided.dragHandleProps}
+                                  />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
+                  )}
+                </section>
 
-            </div>
+              </div>
+            </DragDropContext>
           )}
 
         </div>
