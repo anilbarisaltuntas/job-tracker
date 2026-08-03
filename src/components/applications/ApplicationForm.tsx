@@ -84,6 +84,7 @@ export default function ApplicationForm({
   const [error, setError] = useState<string | null>(null)
   const [cvFile, setCvFile] = useState<File | null>(null) // Seçilen PDF dosyası
   const [isParsing, setIsParsing] = useState(false)
+  const [parsingContactIndex, setParsingContactIndex] = useState<number | null>(null)
 
   // Linkten otomatik ilan bilgilerini çekme
   const handleAutoFill = async () => {
@@ -112,6 +113,40 @@ export default function ApplicationForm({
       alert('Bağlantı hatası oluştu.')
     } finally {
       setIsParsing(false)
+    }
+  }
+
+  // LinkedIn profil linkinden kişi bilgilerini otomatik çekme
+  const handleAutoFillContact = async (index: number) => {
+    const contact = contacts[index]
+    if (!contact.linkedin_url) {
+      alert('Lütfen önce LinkedIn profil linkini girin!')
+      return
+    }
+
+    try {
+      setParsingContactIndex(index)
+      const res = await fetch(`/api/parse-linkedin-contact?url=${encodeURIComponent(contact.linkedin_url)}`)
+      const result = await res.json()
+
+      if (res.ok && result.success) {
+        setContacts(prev => {
+          const updated = [...prev]
+          updated[index] = {
+            ...updated[index],
+            name: result.data.name || updated[index].name,
+            role: result.data.role || updated[index].role,
+          }
+          return updated
+        })
+      } else {
+        alert(result.error || 'Profil bilgileri çekilemedi. Manuel girebilirsiniz.')
+      }
+    } catch (error) {
+      console.error(error)
+      alert('Bağlantı hatası oluştu.')
+    } finally {
+      setParsingContactIndex(null)
     }
   }
 
@@ -499,12 +534,22 @@ export default function ApplicationForm({
                       </div>
                       <div>
                         <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>LinkedIn Profil URL</label>
-                        <input
-                          value={contact.linkedin_url || ''}
-                          onChange={(e) => updateContact(index, 'linkedin_url', e.target.value)}
-                          placeholder="ör: https://linkedin.com/in/ornek"
-                          className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}
-                        />
+                        <div className="flex gap-2">
+                          <input
+                            value={contact.linkedin_url || ''}
+                            onChange={(e) => updateContact(index, 'linkedin_url', e.target.value)}
+                            placeholder="ör: https://linkedin.com/in/ornek"
+                            className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleAutoFillContact(index)}
+                            disabled={parsingContactIndex === index || !contact.linkedin_url}
+                            className="shrink-0 rounded-xl bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-500 transition-colors hover:bg-blue-500 hover:text-white disabled:opacity-50"
+                          >
+                            {parsingContactIndex === index ? '⏳ Bekleyin...' : '✨ Bilgileri Çek'}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
