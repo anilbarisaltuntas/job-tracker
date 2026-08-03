@@ -336,7 +336,7 @@ export default function TodosPage() {
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
-                                  className={`transition-transform ${snapshot.isDragging ? 'z-50 opacity-90 scale-[1.02]' : ''}`}
+                                  className={snapshot.isDragging ? 'z-50 opacity-90' : ''}
                                 >
                                   <TaskRow
                                     task={task}
@@ -385,7 +385,7 @@ export default function TodosPage() {
                                 <div
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
-                                  className={`transition-transform ${snapshot.isDragging ? 'z-50 opacity-90 scale-[1.02]' : ''}`}
+                                  className={snapshot.isDragging ? 'z-50 opacity-90' : ''}
                                 >
                                   <TaskRow
                                     task={task}
