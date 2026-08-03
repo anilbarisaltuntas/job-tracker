@@ -17,7 +17,7 @@ export default async function BoardPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[var(--bg)]">
       <Header />
-      <main className="relative z-10 flex-1 overflow-y-auto px-6 py-6 w-full">
+      <main className="flex-1 w-full px-6 py-6">
         <div className="mb-6 animate-stagger w-full flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
