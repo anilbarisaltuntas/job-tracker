@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { UserStatus } from '@/lib/types'
 import { KANBAN_COLUMNS } from '@/lib/constants'
@@ -6,7 +6,7 @@ import { KANBAN_COLUMNS } from '@/lib/constants'
 export function useStatuses() {
   const [statuses, setStatuses] = useState<UserStatus[]>([])
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const fetchStatuses = useCallback(async () => {
     setLoading(true)
@@ -56,10 +56,12 @@ export function useStatuses() {
     }
     
     setLoading(false)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supabase])
 
   useEffect(() => {
-    fetchStatuses()
+    // Initial remote status synchronization.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchStatuses()
   }, [fetchStatuses])
 
   return { statuses, setStatuses, loading, fetchStatuses }

@@ -1,120 +1,346 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { DragDropContext, Draggable, Droppable, type DraggableProvidedDragHandleProps, type DropResult } from '@hello-pangea/dnd'
+import {
+  BriefcaseBusiness,
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  Circle,
+  Clock3,
+  GripVertical,
+  Pencil,
+  Plus,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { TodoTask } from '@/lib/types'
-import Header from '@/components/layout/Header'
 import TodoForm from '@/components/todos/TodoForm'
-import Link from 'next/link'
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
+import { Button } from '@/components/ui/Button'
+import { FeedbackBanner } from '@/components/ui/FeedbackBanner'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 const PRIORITY_STYLES = {
-  low: { label: 'Düşük', color: 'text-green-600 bg-green-500/10' },
-  medium: { label: 'Orta', color: 'text-yellow-600 bg-yellow-500/10' },
-  high: { label: 'Yüksek', color: 'text-red-600 bg-red-500/10' }
+  low: { label: 'Düşük', className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' },
+  medium: { label: 'Orta', className: 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400' },
+  high: { label: 'Yüksek', className: 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400' },
 }
 
 const CATEGORY_LABELS = {
   general: 'Genel',
-  interview: 'Mülakat Hazırlığı',
-  cv: 'CV/Portfolyo',
-  networking: 'Networking'
+  interview: 'Mülakat hazırlığı',
+  cv: 'CV / Portfolyo',
+  networking: 'Networking',
+}
+
+const STATUS_STYLES = {
+  pending: { label: 'Bekliyor', className: 'border-[var(--border)] bg-[var(--badge-bg)] text-[var(--text-secondary)]' },
+  in_progress: { label: 'Devam ediyor', className: 'border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-400' },
+  completed: { label: 'Tamamlandı', className: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' },
+}
+
+interface TaskRowProps {
+  task: TodoTask
+  dragHandleProps?: DraggableProvidedDragHandleProps | null
+  onToggle: (task: TodoTask) => void
+  onEdit: (task: TodoTask) => void
+  onDelete: (task: TodoTask) => void
+}
+
+function formatTaskDate(date: string | null) {
+  if (!date) return 'Tarih Belirlenmedi'
+
+  const value = new Date(date)
+  const today = new Date()
+  const isToday = value.toDateString() === today.toDateString()
+
+  return value.toLocaleString('tr-TR', {
+    ...(isToday ? {} : { day: 'numeric', month: 'short' }),
+    hour: '2-digit',
+    minute: '2-digit',
+  }).replace(/^/, isToday ? 'Bugün · ' : '')
+}
+
+function TaskRow({ task, dragHandleProps, onToggle, onEdit, onDelete }: TaskRowProps) {
+  const isCompleted = task.status === 'completed'
+  const priority = PRIORITY_STYLES[task.priority]
+  const status = STATUS_STYLES[task.status]
+  const displayDate = isCompleted
+    ? (task.completed_at || task.updated_at || task.created_at)
+    : task.due_date
+
+  return (
+    <article className={`group rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4 shadow-[var(--shadow-xs)] transition-[border-color,background-color] hover:border-[var(--border-strong)] hover:bg-[var(--bg-surface-hover)] ${isCompleted ? 'opacity-70' : ''}`}>
+      <div className="flex items-start gap-3">
+        {dragHandleProps ? (
+          <button
+            type="button"
+            {...dragHandleProps}
+            className="mt-0.5 flex h-6 w-5 shrink-0 cursor-grab items-center justify-center rounded-[5px] text-[var(--text-tertiary)] hover:bg-[var(--badge-bg)] hover:text-[var(--text-primary)] active:cursor-grabbing"
+            aria-label={`${task.title} görevini sürükle`}
+            title="Bugün bölümüne sürükle"
+          >
+            <GripVertical aria-hidden="true" size={14} />
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => onToggle(task)}
+          className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-[7px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${
+            isCompleted
+              ? 'bg-[var(--accent)] text-white'
+              : 'border-2 border-[var(--border-strong)] text-transparent hover:border-[var(--accent)] hover:text-[var(--accent)]'
+          }`}
+          aria-label={isCompleted ? `${task.title} görevini yeniden aç` : `${task.title} görevini tamamla`}
+        >
+          {isCompleted ? <Check aria-hidden="true" size={14} strokeWidth={3} /> : <Circle aria-hidden="true" size={8} fill="currentColor" />}
+        </button>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h3 className={`text-sm font-bold leading-5 text-[var(--text-primary)] ${isCompleted ? 'line-through decoration-[var(--text-tertiary)]' : ''}`}>{task.title}</h3>
+              {task.description ? <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--text-secondary)]">{task.description}</p> : null}
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold ${status.className}`}>
+                {task.status === 'completed' ? <CheckCircle2 aria-hidden="true" size={11} /> : task.status === 'in_progress' ? <Circle aria-hidden="true" size={10} fill="currentColor" /> : <Clock3 aria-hidden="true" size={11} />}
+                {status.label}
+              </span>
+              <span className="rounded-full border border-[var(--border)] bg-[var(--badge-bg)] px-2 py-1 text-[10px] font-semibold text-[var(--text-secondary)]">{CATEGORY_LABELS[task.category]}</span>
+              <span className={`rounded-full border px-2 py-1 text-[10px] font-bold ${priority.className}`}>{priority.label}</span>
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-2 border-t border-[var(--border)] pt-3 sm:grid-cols-2 xl:grid-cols-[minmax(165px,0.6fr)_minmax(0,1.4fr)_auto] xl:items-center">
+            <div className="flex min-h-12 items-center gap-2.5 rounded-[8px] bg-[var(--bg-elevated)] px-3 py-2">
+              <CalendarDays aria-hidden="true" size={14} className="shrink-0 text-[var(--text-tertiary)]" />
+              <div className="min-w-0">
+                <p className="text-[9px] font-bold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">{isCompleted ? 'Tamamlanma' : 'Planlanan'}</p>
+                <p className="mt-0.5 whitespace-nowrap text-[11px] font-semibold text-[var(--text-secondary)]">{formatTaskDate(displayDate)}</p>
+              </div>
+            </div>
+
+            {task.application_id && task.application ? (
+              <Link href="/board" className="flex min-h-12 min-w-0 items-center gap-2.5 rounded-[8px] bg-[var(--bg-elevated)] px-3 py-2 transition-colors hover:bg-[var(--badge-bg)]">
+                <BriefcaseBusiness aria-hidden="true" size={14} className="shrink-0 text-[var(--text-tertiary)]" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[11px] font-bold text-[var(--text-primary)]">{task.application.company_name}</span>
+                  <span className="mt-0.5 block truncate text-[10px] font-medium text-[var(--text-tertiary)]">{task.application.position}</span>
+                </span>
+                <ChevronRight aria-hidden="true" size={13} className="shrink-0 text-[var(--text-tertiary)]" />
+              </Link>
+            ) : (
+              <div className="flex min-h-12 items-center gap-2.5 rounded-[8px] border border-dashed border-[var(--border)] px-3 py-2 text-[10px] font-medium text-[var(--text-tertiary)]">
+                <BriefcaseBusiness aria-hidden="true" size={14} /> Başvuru bağlantısı yok
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-1 sm:col-span-2 xl:col-span-1">
+              <Button variant="ghost" size="sm" className="!h-8 !px-2.5 !text-xs" onClick={() => onEdit(task)}>
+                <Pencil aria-hidden="true" size={13} /> Düzenle
+              </Button>
+              <Button variant="ghost" size="icon" className="!h-8 !w-8 !text-[var(--danger)]" onClick={() => onDelete(task)} aria-label={`${task.title} görevini sil`}>
+                <Trash2 aria-hidden="true" size={14} />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function TaskSection({
+  title,
+  description,
+  icon: Icon,
+  tasks,
+  emptyText,
+  droppableId,
+  canDrag = false,
+  onToggle,
+  onEdit,
+  onDelete,
+}: {
+  title: string
+  description: string
+  icon: typeof CalendarDays
+  tasks: TodoTask[]
+  emptyText: string
+  droppableId?: 'today-tasks' | 'upcoming-tasks'
+  canDrag?: boolean
+  onToggle: (task: TodoTask) => void
+  onEdit: (task: TodoTask) => void
+  onDelete: (task: TodoTask) => void
+}) {
+  return (
+    <section>
+      <div className="mb-3 flex items-center gap-3">
+        <div className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-tertiary)]">
+          <Icon aria-hidden="true" size={15} />
+        </div>
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold text-[var(--text-primary)]">{title}</h2>
+            <span className="rounded-full bg-[var(--badge-bg)] px-2 py-0.5 text-[10px] font-bold text-[var(--text-secondary)]">{tasks.length}</span>
+          </div>
+          <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)]">{description}</p>
+        </div>
+      </div>
+
+      {droppableId ? (
+        <Droppable droppableId={droppableId}>
+          {(provided, snapshot) => (
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className={`min-h-24 rounded-[12px] transition-[background-color,box-shadow] ${snapshot.isDraggingOver ? 'bg-[var(--accent-subtle)] shadow-[inset_0_0_0_1px_var(--accent-border)]' : ''}`}
+            >
+              {tasks.length === 0 ? (
+                <div className={`flex min-h-24 items-center justify-center rounded-[12px] border border-dashed px-5 text-center text-xs ${snapshot.isDraggingOver ? 'border-[var(--accent-border)] text-[var(--accent-strong)]' : 'border-[var(--border-strong)] bg-[var(--bg-surface)]/45 text-[var(--text-tertiary)]'}`}>
+                  {snapshot.isDraggingOver ? 'Bugün için buraya bırak' : emptyText}
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {tasks.map((task, index) => (
+                    <Draggable key={task.id} draggableId={task.id} index={index} isDragDisabled={!canDrag}>
+                      {(dragProvided, dragSnapshot) => (
+                        <div
+                          ref={dragProvided.innerRef}
+                          {...dragProvided.draggableProps}
+                          className={dragSnapshot.isDragging ? 'z-50 rotate-[0.5deg] opacity-95 shadow-[var(--shadow-lg)]' : ''}
+                        >
+                          <TaskRow task={task} dragHandleProps={canDrag ? dragProvided.dragHandleProps : null} onToggle={onToggle} onEdit={onEdit} onDelete={onDelete} />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                </div>
+              )}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      ) : tasks.length === 0 ? (
+        <div className="rounded-[12px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)]/45 px-5 py-8 text-center text-xs text-[var(--text-tertiary)]">{emptyText}</div>
+      ) : (
+        <div className="space-y-2.5">
+          {tasks.map(task => <TaskRow key={task.id} task={task} onToggle={onToggle} onEdit={onEdit} onDelete={onDelete} />)}
+        </div>
+      )}
+    </section>
+  )
 }
 
 export default function TodosPage() {
+  const supabase = useMemo(() => createClient(), [])
   const [tasks, setTasks] = useState<TodoTask[]>([])
-  const [pendingTasks, setPendingTasks] = useState<TodoTask[]>([])
-  const [completedTasks, setCompletedTasks] = useState<TodoTask[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<TodoTask | null>(null)
-  const supabase = createClient()
+  const [deletingTask, setDeletingTask] = useState<TodoTask | null>(null)
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     setLoading(true)
-    const { data, error } = await supabase
+    setError(null)
+
+    const { data, error: fetchError } = await supabase
       .from('todo_tasks')
-      .select('*, application:applications(id, company_name, position)')
+      .select('*, application:applications(id, company_name, company_domain, position)')
       .order('due_date', { ascending: true, nullsFirst: false })
       .order('created_at', { ascending: false })
-    
-    if (data && !error) {
-      setTasks(data)
 
-      const pending = data.filter(t => t.status !== 'completed')
-      const completed = data
-        .filter(t => t.status === 'completed')
-        .sort((a, b) => {
-          const timeA = new Date(a.completed_at || a.updated_at || a.created_at).getTime()
-          const timeB = new Date(b.completed_at || b.updated_at || b.created_at).getTime()
-          return timeB - timeA
-        })
-
-      // Yerel sürükle-bırak sıralama verisini al
-      const savedOrderRaw = localStorage.getItem('todo_pending_order')
-      if (savedOrderRaw) {
-        try {
-          const savedOrder: string[] = JSON.parse(savedOrderRaw)
-          pending.sort((a, b) => {
-            const idxA = savedOrder.indexOf(a.id)
-            const idxB = savedOrder.indexOf(b.id)
-            if (idxA === -1 && idxB === -1) return 0
-            if (idxA === -1) return 1
-            if (idxB === -1) return -1
-            return idxA - idxB
-          })
-        } catch (e) {
-          // varsayılan sıralamada kalsın
-        }
-      }
-
-      setPendingTasks(pending)
-      setCompletedTasks(completed)
+    if (fetchError) {
+      setError('Görevler yüklenemedi. Bağlantını kontrol edip tekrar deneyebilirsin.')
+    } else {
+      setTasks(data || [])
     }
+
     setLoading(false)
-  }
+  }, [supabase])
 
   useEffect(() => {
-    fetchTasks()
-  }, [])
+    // Initial remote task synchronization.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchTasks()
+  }, [fetchTasks])
+
+  const groupedTasks = useMemo(() => {
+    const endOfToday = new Date()
+    endOfToday.setHours(23, 59, 59, 999)
+
+    const openTasks = tasks.filter(task => task.status !== 'completed')
+    const today = openTasks.filter(task => task.due_date && new Date(task.due_date) <= endOfToday)
+    const upcoming = openTasks.filter(task => !task.due_date || new Date(task.due_date) > endOfToday)
+    const completed = tasks
+      .filter(task => task.status === 'completed')
+      .toSorted((first, second) => new Date(second.completed_at || second.updated_at).getTime() - new Date(first.completed_at || first.updated_at).getTime())
+
+    return { today, upcoming, completed }
+  }, [tasks])
 
   const handleToggleStatus = async (task: TodoTask) => {
-    const newStatus: TodoTask['status'] = task.status === 'completed' ? 'pending' : 'completed'
-    const completedAt = newStatus === 'completed' ? (task.completed_at || new Date().toISOString()) : null
+    const previousTasks = tasks
+    const nextStatus: TodoTask['status'] = task.status === 'completed' ? 'pending' : 'completed'
+    const completedAt = nextStatus === 'completed' ? new Date().toISOString() : null
 
-    // Anlık arayüz güncellemesi
-    const updatedTasks = tasks.map(t => t.id === task.id ? { ...t, status: newStatus, completed_at: completedAt } : t)
-    setTasks(updatedTasks)
+    setTasks(current => current.map(item => item.id === task.id ? { ...item, status: nextStatus, completed_at: completedAt } : item))
+    setError(null)
 
-    if (newStatus === 'completed') {
-      const updatedTask: TodoTask = { ...task, status: newStatus, completed_at: completedAt }
-      setPendingTasks(prev => prev.filter(t => t.id !== task.id))
-      setCompletedTasks(prev => [updatedTask, ...prev])
-    } else {
-      const updatedTask: TodoTask = { ...task, status: newStatus, completed_at: null }
-      setCompletedTasks(prev => prev.filter(t => t.id !== task.id))
-      setPendingTasks(prev => [...prev, updatedTask])
-    }
-    
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('todo_tasks')
-      .update({ status: newStatus, completed_at: completedAt, updated_at: new Date().toISOString() })
+      .update({ status: nextStatus, completed_at: completedAt, updated_at: new Date().toISOString() })
       .eq('id', task.id)
 
-    if (error) {
-      await supabase
-        .from('todo_tasks')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', task.id)
+    if (updateError) {
+      setTasks(previousTasks)
+      setError('Görev durumu güncellenemedi. Değişiklik geri alındı.')
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Görevi silmek istediğinize emin misiniz?')) return
-    setTasks(tasks.filter(t => t.id !== id))
-    setPendingTasks(pendingTasks.filter(t => t.id !== id))
-    setCompletedTasks(completedTasks.filter(t => t.id !== id))
-    await supabase.from('todo_tasks').delete().eq('id', id)
+  const handleDragEnd = async (result: DropResult) => {
+    const { source, destination, draggableId } = result
+    if (!destination) return
+    if (source.droppableId !== 'upcoming-tasks' || destination.droppableId !== 'today-tasks') return
+
+    const task = tasks.find(item => item.id === draggableId)
+    if (!task) return
+
+    const previousTasks = tasks
+    const dueDate = new Date().toISOString()
+    setTasks(current => current.map(item => item.id === draggableId ? { ...item, due_date: dueDate } : item))
+    setError(null)
+
+    const { error: updateError } = await supabase
+      .from('todo_tasks')
+      .update({ due_date: dueDate, updated_at: new Date().toISOString() })
+      .eq('id', draggableId)
+
+    if (updateError) {
+      setTasks(previousTasks)
+      setError('Görev Bugün bölümüne taşınamadı. Değişiklik geri alındı.')
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingTask) return
+
+    const task = deletingTask
+    const previousTasks = tasks
+    setDeletingTask(null)
+    setTasks(current => current.filter(item => item.id !== task.id))
+
+    const { error: deleteError } = await supabase.from('todo_tasks').delete().eq('id', task.id)
+    if (deleteError) {
+      setTasks(previousTasks)
+      setError('Görev silinemedi. Kayıt listeye geri getirildi.')
+    }
   }
 
   const openForm = (task: TodoTask | null = null) => {
@@ -122,300 +348,85 @@ export default function TodosPage() {
     setIsFormOpen(true)
   }
 
-  const handleFormSave = () => {
-    setIsFormOpen(false)
-    fetchTasks()
-  }
-
-  // Sürükle - Bırak İşleyicisi
-  const handleDragEnd = (result: DropResult) => {
-    if (!result.destination) return
-    const { source, destination } = result
-    if (source.index === destination.index) return
-
-    if (source.droppableId === 'pending-tasks') {
-      const items = Array.from(pendingTasks)
-      const [reorderedItem] = items.splice(source.index, 1)
-      items.splice(destination.index, 0, reorderedItem)
-
-      setPendingTasks(items)
-
-      // Sıralama ID listesini kaydedelim
-      const idOrder = items.map(t => t.id)
-      localStorage.setItem('todo_pending_order', JSON.stringify(idOrder))
-    } else if (source.droppableId === 'completed-tasks') {
-      const items = Array.from(completedTasks)
-      const [reorderedItem] = items.splice(source.index, 1)
-      items.splice(destination.index, 0, reorderedItem)
-
-      setCompletedTasks(items)
-    }
-  }
-
-  const TaskRow = ({ task, dragHandleProps }: { task: TodoTask; dragHandleProps?: any }) => {
-    const isCompleted = task.status === 'completed'
-    const isOverdue = task.due_date && new Date(task.due_date) < new Date() && !isCompleted
-
-    return (
-      <div 
-        className={`group flex items-start gap-2.5 rounded-xl transition-all border p-3 hover:shadow-md ${
-          isCompleted ? 'opacity-60 grayscale-[20%]' : ''
-        }`}
-        style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}
-      >
-        {/* Sürükleme Tutamağı (Drag Handle) */}
-        <div
-          {...dragHandleProps}
-          className="flex h-7 w-5 shrink-0 cursor-grab items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] active:cursor-grabbing"
-          title="Görevin sırasını değiştirmek için sürükleyin"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="9" cy="5" r="1"></circle>
-            <circle cx="15" cy="5" r="1"></circle>
-            <circle cx="9" cy="12" r="1"></circle>
-            <circle cx="15" cy="12" r="1"></circle>
-            <circle cx="9" cy="19" r="1"></circle>
-            <circle cx="15" cy="19" r="1"></circle>
-          </svg>
-        </div>
-
-        {/* Checkbox */}
-        <button 
-          onClick={() => handleToggleStatus(task)}
-          className={`mt-0.5 flex shrink-0 items-center justify-center rounded transition-colors ${
-            isCompleted 
-              ? 'h-5 w-5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' 
-              : 'h-5 w-5 border-2 border-slate-300 hover:border-emerald-400'
-          }`}
-        >
-          {isCompleted && <span className="text-[12px] font-bold">✓</span>}
-        </button>
-
-        {/* İçerik */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className={`text-sm break-words font-semibold`} style={{ color: 'var(--text-primary)' }}>
-              {task.title}
-            </h3>
-            
-            {/* Etiketler */}
-            <div className="flex shrink-0 flex-wrap justify-end gap-2 text-[10px] font-medium sm:text-xs">
-              <span className="rounded-full bg-slate-100 px-2 py-1 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                {CATEGORY_LABELS[task.category]}
-              </span>
-              <span className={`rounded-full px-2 py-1 ${PRIORITY_STYLES[task.priority].color}`}>
-                {PRIORITY_STYLES[task.priority].label} Öncelik
-              </span>
-            </div>
-          </div>
-
-          {/* Detaylar */}
-          {task.description && (
-            <p className="mt-1 text-xs break-words" style={{ color: 'var(--text-tertiary)' }}>
-              {task.description}
-            </p>
-          )}
-
-          <div className="mt-3 flex flex-wrap items-center gap-4 text-xs">
-            {task.due_date && (
-              <span className={`flex items-center gap-1 font-medium ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}>
-                📅 {new Date(task.due_date).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                {isOverdue && ' (Gecikti)'}
-              </span>
-            )}
-            
-            {isCompleted && (task.completed_at || task.updated_at) && (
-              <span className="flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
-                ✅ Tamamlanma Saati: {new Date(task.completed_at || task.updated_at).toLocaleString('tr-TR', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </span>
-            )}
-
-            {task.application_id && task.application && (
-              <Link 
-                href="/board" 
-                className="flex items-center gap-1 font-medium text-blue-500 hover:underline"
-              >
-                🔗 {task.application.company_name} - {task.application.position}
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* Aksiyonlar (Hover olunca görünür) */}
-        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-          {!isCompleted && (
-            <button 
-              onClick={() => openForm(task)}
-              className="rounded p-1 text-blue-500 hover:bg-blue-500/10 text-xs font-bold"
-              title="Düzenle"
-            >
-              ✎
-            </button>
-          )}
-          <button 
-            onClick={() => handleDelete(task.id)}
-            className="rounded p-1 text-red-500 hover:bg-red-500/10 text-xs font-bold"
-            title="Sil"
-          >
-            ✕
-          </button>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="flex min-h-screen flex-col">
-      <Header />
-      
-      <main className="flex-1 overflow-y-auto p-6">
-        <div className="mx-auto max-w-6xl">
-          
-          <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <>
+      <section className="p-4 sm:p-6 lg:p-8">
+        <div className="w-full">
+          <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h2 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                Görevler
-              </h2>
-              <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
-                Görevlerinizi sürükleyip bırakarak dilediğiniz sırada düzenleyin.
-              </p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Ajanda</p>
+              <h1 className="mt-2 text-2xl font-bold tracking-[-0.025em] text-[var(--text-primary)]">Görevler</h1>
+              <p className="mt-1.5 text-sm text-[var(--text-secondary)]">Başvuruların için sıradaki adımları tek bir akışta takip et.</p>
             </div>
-            
-            <button
-              onClick={() => openForm()}
-              className="rounded-xl px-5 py-2.5 text-sm font-semibold shadow-sm transition-all hover:scale-105"
-              style={{ backgroundColor: 'var(--btn-primary-bg)', color: 'var(--btn-primary-text)' }}
-            >
-              + Yeni Görev Ekle
-            </button>
+            <Button variant="primary" onClick={() => openForm()}>
+              <Plus aria-hidden="true" size={15} /> Yeni görev
+            </Button>
           </div>
+
+          {error ? (
+            <FeedbackBanner message={error} onRetry={() => void fetchTasks()} onDismiss={() => setError(null)} className="mb-5" />
+          ) : null}
 
           {loading ? (
-            <div className="py-12 text-center text-sm" style={{ color: 'var(--text-tertiary)' }}>
-              Görevler yükleniyor...
+            <div className="space-y-7" aria-label="Görevler yükleniyor" role="status">
+              {[2, 3].map((rowCount, sectionIndex) => (
+                <div key={sectionIndex}>
+                  <Skeleton className="mb-3 h-9 w-40" />
+                  <div className="space-y-2.5">
+                    {Array.from({ length: rowCount }, (_, index) => <Skeleton key={index} className="h-28 rounded-[12px]" />)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="flex min-h-72 flex-col items-center justify-center rounded-[14px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)]/45 px-6 text-center">
+              <div className="flex h-11 w-11 items-center justify-center rounded-[11px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-tertiary)]"><CheckCircle2 aria-hidden="true" size={20} /></div>
+              <h2 className="mt-4 text-sm font-bold text-[var(--text-primary)]">Henüz görev yok</h2>
+              <p className="mt-1 max-w-xs text-xs leading-5 text-[var(--text-tertiary)]">Bir başvurunun sonraki adımını ekleyerek ajandanı oluşturmaya başlayabilirsin.</p>
+              <Button variant="secondary" size="sm" className="mt-4" onClick={() => openForm()}><Plus aria-hidden="true" size={14} /> İlk görevi ekle</Button>
             </div>
           ) : (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-                
-                {/* Bekleyenler (Sol Taraf) */}
-                <section className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                        Yapılacaklar
-                      </h3>
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                        {pendingTasks.length}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-[var(--text-tertiary)]">⋮⋮ Sürükleyerek Sırala</span>
-                  </div>
-                  
-                  {pendingTasks.length === 0 ? (
-                    <div className="rounded-xl border border-dashed p-6 text-center text-sm italic text-slate-400" style={{ borderColor: 'var(--border)' }}>
-                      Henüz hiç yapılacak göreviniz yok.
-                    </div>
-                  ) : (
-                    <Droppable droppableId="pending-tasks">
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className="space-y-3"
-                        >
-                          {pendingTasks.map((task, index) => (
-                            <Draggable key={task.id} draggableId={task.id} index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  className={snapshot.isDragging ? 'z-50 opacity-90' : ''}
-                                >
-                                  <TaskRow
-                                    task={task}
-                                    dragHandleProps={provided.dragHandleProps}
-                                  />
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  )}
-                </section>
-
-                {/* Tamamlananlar (Sağ Taraf) */}
-                <section className="flex flex-col gap-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                        Tamamlananlar
-                      </h3>
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                        {completedTasks.length}
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-[var(--text-tertiary)]">⋮⋮ Sürükleyerek Sırala</span>
-                  </div>
-                  
-                  {completedTasks.length === 0 ? (
-                    <div className="rounded-xl border border-dashed p-6 text-center text-sm italic text-slate-400" style={{ borderColor: 'var(--border)' }}>
-                      Henüz tamamlanan görev yok.
-                    </div>
-                  ) : (
-                    <Droppable droppableId="completed-tasks">
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className="space-y-3"
-                        >
-                          {completedTasks.map((task, index) => (
-                            <Draggable key={task.id} draggableId={task.id} index={index}>
-                              {(provided, snapshot) => (
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  className={snapshot.isDragging ? 'z-50 opacity-90' : ''}
-                                >
-                                  <TaskRow
-                                    task={task}
-                                    dragHandleProps={provided.dragHandleProps}
-                                  />
-                                </div>
-                              )}
-                            </Draggable>
-                          ))}
-                          {provided.placeholder}
-                        </div>
-                      )}
-                    </Droppable>
-                  )}
-                </section>
-
+            <DragDropContext onDragEnd={result => void handleDragEnd(result)}>
+              <div className="grid grid-cols-1 gap-9 lg:grid-cols-2 lg:items-start lg:gap-6 xl:gap-8">
+                <div className="space-y-9">
+                  <TaskSection title="Bugün" description="Bugün odaklanacağın görevler" icon={CalendarDays} tasks={groupedTasks.today} emptyText="Bugün için planlanmış görev bulunmuyor." droppableId="today-tasks" onToggle={task => void handleToggleStatus(task)} onEdit={openForm} onDelete={setDeletingTask} />
+                  <TaskSection title="Yaklaşan" description="Bir görevi Bugün'e taşımak için sürükle" icon={Clock3} tasks={groupedTasks.upcoming} emptyText="Yaklaşan görev bulunmuyor." droppableId="upcoming-tasks" canDrag onToggle={task => void handleToggleStatus(task)} onEdit={openForm} onDelete={setDeletingTask} />
+                </div>
+                <div className="lg:sticky lg:top-24">
+                  <TaskSection title="Tamamlanan" description="Son tamamlanan görevler" icon={CheckCircle2} tasks={groupedTasks.completed} emptyText="Henüz tamamlanan görev yok." onToggle={task => void handleToggleStatus(task)} onEdit={openForm} onDelete={setDeletingTask} />
+                </div>
               </div>
             </DragDropContext>
           )}
-
         </div>
-      </main>
+      </section>
 
-      {isFormOpen && (
-        <TodoForm 
-          editingTodo={editingTask} 
-          onClose={() => setIsFormOpen(false)} 
-          onSave={handleFormSave} 
+      {isFormOpen ? (
+        <TodoForm
+          editingTodo={editingTask}
+          onClose={() => { setIsFormOpen(false); setEditingTask(null) }}
+          onSave={() => { setIsFormOpen(false); setEditingTask(null); void fetchTasks() }}
         />
-      )}
-    </div>
+      ) : null}
+
+      {deletingTask ? (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/65 p-4" onMouseDown={event => { if (event.target === event.currentTarget) setDeletingTask(null) }}>
+          <div role="alertdialog" aria-modal="true" aria-labelledby="todo-delete-title" aria-describedby="todo-delete-description" className="w-full max-w-sm rounded-[14px] border border-[var(--border-strong)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-lg)]">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-[var(--danger-subtle)] text-[var(--danger)]"><Trash2 aria-hidden="true" size={18} /></div>
+              <div className="min-w-0 flex-1">
+                <h2 id="todo-delete-title" className="text-base font-bold text-[var(--text-primary)]">Görevi sil?</h2>
+                <p id="todo-delete-description" className="mt-1.5 text-sm leading-6 text-[var(--text-secondary)]">“{deletingTask.title}” kalıcı olarak silinecek. Bu işlem geri alınamaz.</p>
+              </div>
+              <button type="button" onClick={() => setDeletingTask(null)} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]" aria-label="Silme onayını kapat"><X aria-hidden="true" size={17} /></button>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setDeletingTask(null)} autoFocus>Vazgeç</Button>
+              <Button variant="danger" onClick={() => void handleDelete()}><Trash2 aria-hidden="true" size={15} /> Evet, sil</Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }

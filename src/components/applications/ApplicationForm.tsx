@@ -9,11 +9,15 @@
  * - Kişi silme özelliği
  */
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { BriefcaseBusiness, Link2, Save, UserRound, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Application, ApplicationStatus, ContactFormData, UserStatus } from '@/lib/types'
 import { APPLICATION_SOURCES } from '@/lib/constants'
+import { normalizeCompanyDomain } from '@/lib/company-brand'
 import RichTextEditor from '../ui/RichTextEditor'
+import CompanyLogo from '../ui/CompanyLogo'
+import { Button } from '../ui/Button'
 
 interface ApplicationFormProps {
   editingApplication: Application | null
@@ -28,6 +32,7 @@ const emptyContact = (): ContactFormData => ({
   name: '',
   role: '',
   email: '',
+  phone: '',
   message_sent: false,
   message_date: '',
   email_sent: false,
@@ -44,10 +49,12 @@ export default function ApplicationForm({
   onSuccess,
 }: ApplicationFormProps) {
   const isEditing = !!editingApplication
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
+  const panelRef = useRef<HTMLDivElement>(null)
 
   const [formData, setFormData] = useState({
     company_name: editingApplication?.company_name || '',
+    company_domain: editingApplication?.company_domain || '',
     position: editingApplication?.position || '',
     cv_version: editingApplication?.cv_version || '',
     application_date: editingApplication?.application_date || new Date().toISOString().split('T')[0],
@@ -69,6 +76,7 @@ export default function ApplicationForm({
         name: c.name,
         role: c.role || '',
         email: c.email || '',
+        phone: c.phone || '',
         message_sent: c.message_sent,
         message_date: c.message_date || '',
         email_sent: c.email_sent,
@@ -83,7 +91,24 @@ export default function ApplicationForm({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cvFile, setCvFile] = useState<File | null>(null) // Seçilen PDF dosyası
+  const [existingCvUrl, setExistingCvUrl] = useState(editingApplication?.cv_file_url || null)
   const [isParsing, setIsParsing] = useState(false)
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    panelRef.current?.focus()
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !loading) onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [loading, onClose])
 
   // Linkten otomatik ilan bilgilerini çekme
   const handleAutoFill = async () => {
@@ -101,6 +126,7 @@ export default function ApplicationForm({
         setFormData(prev => ({
           ...prev,
           company_name: result.data.company_name || prev.company_name,
+          company_domain: result.data.company_domain || prev.company_domain,
           position: result.data.position || prev.position,
           application_date: result.data.posted_date || prev.application_date,
         }))
@@ -150,6 +176,7 @@ export default function ApplicationForm({
 
     const cleanData = {
       ...formData,
+      company_domain: normalizeCompanyDomain(formData.company_domain),
       cv_version: formData.cv_version || null,
       follow_up_date: formData.follow_up_date || null,
       source: formData.source || null,
@@ -163,7 +190,7 @@ export default function ApplicationForm({
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Oturum bulunamadı")
 
-      let finalCvUrl = editingApplication?.cv_file_url || null
+      let finalCvUrl = existingCvUrl
 
       // Eğer yeni bir PDF seçildiyse, Supabase Storage'a yükle
       if (cvFile) {
@@ -229,6 +256,7 @@ export default function ApplicationForm({
             name: c.name,
             role: c.role || null,
             email: c.email || null,
+            ...(c.phone ? { phone: c.phone } : {}),
             message_sent: c.message_sent,
             message_date: c.message_date || null,
             email_sent: c.email_sent,
@@ -263,54 +291,86 @@ export default function ApplicationForm({
   const labelStyle: React.CSSProperties = { color: 'var(--text-secondary)' }
 
   return (
-    <div 
-      onClick={onClose} 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto"
+    <div
+      className="fixed inset-0 z-[110] bg-black/55 backdrop-blur-[2px]"
+      onMouseDown={event => {
+        if (event.target === event.currentTarget && !loading) onClose()
+      }}
     >
       <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl p-8 shadow-2xl my-auto"
-        style={{
-          backgroundColor: 'var(--bg-elevated)',
-          border: '1px solid var(--border-strong)',
-        }}
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="application-form-title"
+        tabIndex={-1}
+        className="ml-auto flex h-full w-full max-w-[760px] flex-col border-l border-[var(--border-strong)] bg-[var(--bg-elevated)] shadow-[var(--shadow-lg)] outline-none motion-safe:animate-[slideInRight_180ms_ease-out]"
       >
-        <button
-          onClick={onClose}
-          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-          style={{ color: 'var(--text-tertiary)' }}
-        >
-          ✕
-        </button>
-
-        <h2
-          className="mb-8 text-xl font-semibold tracking-tight"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          {isEditing ? 'Başvuruyu Düzenle' : 'Yeni Başvuru'}
-        </h2>
-
-        {error && (
-          <div className="mb-4 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {error}
+        <header className="flex shrink-0 items-start gap-4 border-b border-[var(--border)] px-5 py-5 sm:px-7 sm:py-6">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-surface)] text-[var(--text-tertiary)]">
+            <BriefcaseBusiness aria-hidden="true" size={18} />
           </div>
-        )}
+          <div className="min-w-0 flex-1">
+            <h2 id="application-form-title" className="text-lg font-bold tracking-[-0.02em] text-[var(--text-primary)]">
+              {isEditing ? 'Başvuruyu düzenle' : 'Yeni başvuru'}
+            </h2>
+            <p className="mt-1 text-xs leading-5 text-[var(--text-tertiary)]">
+              {isEditing ? 'Başvuru bilgilerini ve ilişkili kişileri güncelle.' : 'Yeni başvurunun temel bilgilerini ve takip ayrıntılarını ekle.'}
+            </p>
+          </div>
+          <Button variant="ghost" size="icon" onClick={onClose} disabled={loading} aria-label="Başvuru formunu kapat">
+            <X aria-hidden="true" size={18} />
+          </Button>
+        </header>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-6 sm:px-7">
+            {error && (
+              <div className="rounded-[10px] border border-[var(--danger)]/25 bg-[var(--danger-subtle)] px-4 py-3 text-sm text-[var(--danger)]" role="alert">
+                {error}
+              </div>
+            )}
+
           {/* Şirket + Pozisyon */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <section className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4 sm:p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <BriefcaseBusiness aria-hidden="true" size={15} className="text-[var(--text-tertiary)]" />
+              <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--text-tertiary)]">Şirket ve pozisyon</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Şirket Adı *</label>
-              <input name="company_name" value={formData.company_name} onChange={handleChange} required placeholder="ör: Google" className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
+              <div className="flex items-center gap-2">
+                <CompanyLogo companyName={formData.company_name} companyDomain={formData.company_domain} />
+                <input name="company_name" value={formData.company_name} onChange={handleChange} required placeholder="ör: Google" className="min-w-0 flex-1 rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
+              </div>
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Pozisyon *</label>
               <input name="position" value={formData.position} onChange={handleChange} required placeholder="ör: Frontend Developer" className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
             </div>
-          </div>
+            </div>
+
+            <div className="mt-4">
+            <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Şirket websitesi <span style={{ color: 'var(--text-tertiary)' }}>(logo için)</span></label>
+            <input
+              name="company_domain"
+              value={formData.company_domain}
+              onChange={handleChange}
+              placeholder="ör: google.com"
+              inputMode="url"
+              className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all"
+              style={inputStyle}
+            />
+            </div>
+          </section>
 
           {/* Link + Metrikler */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <section className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4 sm:p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <Link2 aria-hidden="true" size={15} className="text-[var(--text-tertiary)]" />
+              <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--text-tertiary)]">İlan ve takip bilgileri</h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>İlan Linki</label>
               <div className="flex gap-2">
@@ -341,8 +401,8 @@ export default function ApplicationForm({
                 <option value="high">🟢 Yüksek</option>
               </select>
             </div>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Durum</label>
               <select name="status" value={formData.status} onChange={handleChange} className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}>
@@ -358,7 +418,7 @@ export default function ApplicationForm({
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>CV Dosyası (PDF)</label>
               
-              {editingApplication?.cv_file_url && !cvFile ? (
+              {existingCvUrl && !cvFile ? (
                 <div 
                   className="flex items-center justify-between rounded-xl px-3 py-2 text-sm"
                   style={{ backgroundColor: 'var(--badge-bg)', border: '1px solid var(--border)' }}
@@ -368,15 +428,7 @@ export default function ApplicationForm({
                   </span>
                   <button
                     type="button"
-                    onClick={() => {
-                      // Bu butona tıklandığında eski CV linkini (sadece UI'da) geçici olarak siliyoruz
-                      // ki dosya seçme input'u ortaya çıksın.
-                      if (editingApplication) {
-                        editingApplication.cv_file_url = null;
-                        // Sadece render'ı tetiklemek için state'i küçük bir şekilde kandırıyoruz
-                        setFormData(prev => ({ ...prev }));
-                      }
-                    }}
+                    onClick={() => setExistingCvUrl(null)}
                     className="text-xs text-blue-500 hover:underline"
                   >
                     Değiştir
@@ -402,7 +454,7 @@ export default function ApplicationForm({
           </div>
 
           {/* Tarihler */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div>
               <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Başvuru Tarihi *</label>
               <input name="application_date" type="date" value={formData.application_date} onChange={handleChange} required className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle} />
@@ -420,14 +472,18 @@ export default function ApplicationForm({
                 ))}
               </select>
             </div>
-          </div>
+            </div>
+          </section>
 
           {/* ============================== */}
           {/* İLETİŞİM KİŞİLERİ - YENİ */}
           {/* ============================== */}
-          <div className="mt-6 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+          <section className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4 sm:p-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>👤 İletişim Kişileri</h3>
+              <div className="flex items-center gap-2">
+                <UserRound aria-hidden="true" size={15} className="text-[var(--text-tertiary)]" />
+                <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--text-tertiary)]">İletişim kişileri</h3>
+              </div>
               <button
                 type="button"
                 onClick={addContact}
@@ -469,7 +525,7 @@ export default function ApplicationForm({
                     </div>
 
                     {/* Kişi bilgileri */}
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div>
                         <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Ad Soyad *</label>
                         <input
@@ -491,9 +547,20 @@ export default function ApplicationForm({
                       <div>
                         <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>E-posta</label>
                         <input
+                          type="email"
                           value={contact.email}
                           onChange={(e) => updateContact(index, 'email', e.target.value)}
                           placeholder="ör: ahmet@sirket.com"
+                          className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Telefon</label>
+                        <input
+                          type="tel"
+                          value={contact.phone}
+                          onChange={(e) => updateContact(index, 'phone', e.target.value)}
+                          placeholder="ör: +90 555 000 00 00"
                           className="w-full rounded-xl px-3 py-2 text-sm outline-none transition-all" style={inputStyle}
                         />
                       </div>
@@ -571,42 +638,28 @@ export default function ApplicationForm({
                 </div>
               </div>
             )}
-          </div>
+          </section>
 
 
 
           {/* Notlar */}
-          <div>
-            <label className="mb-1.5 block text-xs font-medium" style={labelStyle}>Notlar</label>
+          <section className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4 sm:p-5">
+            <label className="mb-3 block text-xs font-bold uppercase tracking-[0.1em] text-[var(--text-tertiary)]">Notlar</label>
             <RichTextEditor 
               content={formData.notes}
               onChange={(html) => setFormData(prev => ({ ...prev, notes: html }))}
             />
+          </section>
           </div>
 
           {/* Butonlar */}
-          <div className="mt-8 flex justify-end gap-3 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl px-5 py-2.5 text-sm font-medium transition-colors"
-              style={{ color: 'var(--text-tertiary)' }}
-            >
-              İptal
-            </button>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="rounded-xl px-6 py-2.5 text-sm font-medium transition-all disabled:opacity-50"
-              style={{
-                backgroundColor: 'var(--btn-primary-bg)',
-                color: 'var(--btn-primary-text)',
-              }}
-            >
+          <footer className="flex shrink-0 justify-end gap-2 border-t border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-4 sm:px-7">
+            <Button variant="secondary" onClick={onClose} disabled={loading}>İptal</Button>
+            <Button variant="primary" type="submit" disabled={loading}>
+              <Save aria-hidden="true" size={15} />
               {loading ? 'Kaydediliyor...' : isEditing ? 'Değişiklikleri Kaydet' : 'Başvuru Ekle'}
-            </button>
-          </div>
+            </Button>
+          </footer>
         </form>
       </div>
     </div>

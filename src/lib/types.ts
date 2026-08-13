@@ -33,6 +33,7 @@ export interface Contact {
   name: string
   role: string | null
   email: string | null
+  phone: string | null
   message_sent: boolean
   message_date: string | null
   email_sent: boolean
@@ -49,6 +50,7 @@ export interface ContactFormData {
   name: string
   role: string
   email: string
+  phone: string
   message_sent: boolean
   message_date: string
   email_sent: boolean
@@ -62,6 +64,7 @@ export interface Application {
   id: string
   user_id: string
   company_name: string
+  company_domain: string | null
   position: string
   cv_version: string | null
   application_date: string
@@ -93,17 +96,6 @@ export type CreateApplicationInput = Omit<
 /** Başvuru güncellerken gönderilecek veri (tüm alanlar opsiyonel) */
 export type UpdateApplicationInput = Partial<CreateApplicationInput>
 
-/** Bildirim veri yapısı */
-export interface Notification {
-  id: string
-  user_id: string
-  application_id: string
-  message: string
-  is_read: boolean
-  created_at: string
-  application?: Application // İlişkili başvuru (join ile gelir)
-}
-
 /** Geçmiş / Log veri yapısı */
 export interface ApplicationHistory {
   id: string
@@ -121,6 +113,7 @@ export interface SavedJob {
   id: string
   user_id: string
   company_name: string
+  company_domain: string | null
   position: string
   posted_date: string | null
   job_url: string | null

@@ -4,7 +4,7 @@
  * LOGIN (GİRİŞ) SAYFASI - Modern SaaS Design
  */
 
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -19,13 +19,15 @@ export default function LoginPage() {
   useEffect(() => {
     const savedEmail = localStorage.getItem('rememberedEmail')
     if (savedEmail) {
+      // Restore the explicitly remembered browser preference after hydration.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEmail(savedEmail)
       setRememberMe(true)
     }
   }, [])
 
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()

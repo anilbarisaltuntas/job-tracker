@@ -1,6 +1,6 @@
 'use client'
 
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 
@@ -10,7 +10,7 @@ interface RichTextEditorProps {
   placeholder?: string
 }
 
-const MenuBar = ({ editor }: { editor: any }) => {
+const MenuBar = ({ editor }: { editor: Editor | null }) => {
   if (!editor) {
     return null
   }
@@ -85,8 +85,8 @@ export default function RichTextEditor({ content, onChange, placeholder = 'Notla
   })
 
   return (
-    <div 
-      className="overflow-hidden rounded-xl transition-all"
+    <div
+      className="overflow-hidden rounded-[10px] transition-[border-color,box-shadow]"
       style={{
         backgroundColor: 'var(--input-bg)',
         border: '1px solid var(--input-border)',

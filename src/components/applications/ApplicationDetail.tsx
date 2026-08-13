@@ -1,17 +1,35 @@
 'use client'
 
-/**
- * APPLICATION DETAIL — Başvuru Detay Modal'ı (v2)
- * 
- * Yenilikler:
- * - Çoklu iletişim kişilerini gösterir
- * - Her kişi için mesaj/mail durumunu gösterir
- */
-
-import { Application, ApplicationHistory, UserStatus, TodoTask } from '@/lib/types'
-import { useState, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  AlertTriangle,
+  BriefcaseBusiness,
+  CalendarDays,
+  Check,
+  CheckSquare2,
+  Clock3,
+  Download,
+  ExternalLink,
+  FileText,
+  History,
+  Link2,
+  Mail,
+  MessageSquare,
+  NotebookPen,
+  Pencil,
+  Phone,
+  Plus,
+  Trash2,
+  UserRound,
+  UsersRound,
+  X,
+} from 'lucide-react'
+import { Application, ApplicationHistory, TodoTask, UserStatus } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/Button'
+import CompanyLogo from '@/components/ui/CompanyLogo'
 import TodoForm from '@/components/todos/TodoForm'
+import { APPLICATION_SOURCES, KANBAN_COLUMNS } from '@/lib/constants'
 
 interface ApplicationDetailProps {
   application: Application
@@ -21,6 +39,124 @@ interface ApplicationDetailProps {
   onDelete: (appId: string) => void
 }
 
+type DetailTab = 'summary' | 'contacts' | 'notes' | 'tasks'
+
+interface HistoryDisplayItem {
+  id: string
+  label: string
+  createdAt: string
+  changeCount: number
+  isReverted: boolean
+}
+
+const TABS: Array<{ id: DetailTab; label: string; icon: typeof FileText }> = [
+  { id: 'summary', label: 'Özet', icon: FileText },
+  { id: 'contacts', label: 'Kişiler', icon: UsersRound },
+  { id: 'notes', label: 'Notlar', icon: NotebookPen },
+  { id: 'tasks', label: 'Görevler', icon: CheckSquare2 },
+]
+
+const matchLabels = {
+  low: 'Düşük',
+  medium: 'Orta',
+  high: 'Yüksek',
+}
+
+const matchStyles = {
+  low: 'border-rose-500/20 bg-rose-500/10 text-rose-600 dark:text-rose-400',
+  medium: 'border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  high: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+}
+
+function formatDate(date: string | null, includeTime = false) {
+  if (!date) return 'Belirtilmedi'
+
+  return new Date(date).toLocaleString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    ...(includeTime ? { hour: '2-digit', minute: '2-digit' } : {}),
+  })
+}
+
+function getStatusTitle(statusId: string | null, statuses: UserStatus[]) {
+  if (!statusId) return 'Bilinmeyen durum'
+
+  const currentStatus = statuses.find(status => status.id === statusId)
+  if (currentStatus) return currentStatus.title
+
+  const legacyStatus = KANBAN_COLUMNS.find(status => status.id === statusId)
+  if (legacyStatus) return legacyStatus.title
+
+  return statusId
+    .split('_')
+    .filter(Boolean)
+    .map(word => word.charAt(0).toLocaleUpperCase('tr-TR') + word.slice(1))
+    .join(' ')
+}
+
+function buildHistoryDisplay(history: ApplicationHistory[], statuses: UserStatus[]): HistoryDisplayItem[] {
+  const displayItems: HistoryDisplayItem[] = []
+
+  for (let index = 0; index < history.length;) {
+    const item = history[index]
+
+    if (item.event_type !== 'STATUS_CHANGED') {
+      displayItems.push({
+        id: item.id,
+        label: item.description,
+        createdAt: item.created_at,
+        changeCount: 1,
+        isReverted: false,
+      })
+      index += 1
+      continue
+    }
+
+    const minuteKey = item.created_at.slice(0, 16)
+    const group: ApplicationHistory[] = []
+
+    while (
+      index < history.length &&
+      history[index].event_type === 'STATUS_CHANGED' &&
+      history[index].created_at.slice(0, 16) === minuteKey
+    ) {
+      group.push(history[index])
+      index += 1
+    }
+
+    const newestChange = group[0]
+    const oldestChange = group[group.length - 1]
+    const initialStatus = oldestChange.old_status
+    const finalStatus = newestChange.new_status
+    const isReverted = group.length > 1 && initialStatus === finalStatus
+
+    displayItems.push({
+      id: newestChange.id,
+      label: isReverted
+        ? `${getStatusTitle(finalStatus, statuses)} durumuna geri dönüldü`
+        : `${getStatusTitle(initialStatus, statuses)} → ${getStatusTitle(finalStatus, statuses)}`,
+      createdAt: newestChange.created_at,
+      changeCount: group.length,
+      isReverted,
+    })
+  }
+
+  return displayItems
+}
+
+function EmptyState({ icon: Icon, title, description }: { icon: typeof FileText; title: string; description: string }) {
+  return (
+    <div className="flex min-h-56 flex-col items-center justify-center rounded-[12px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)]/55 px-6 text-center">
+      <div className="flex h-10 w-10 items-center justify-center rounded-[10px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-tertiary)]">
+        <Icon aria-hidden="true" size={18} />
+      </div>
+      <p className="mt-4 text-sm font-semibold text-[var(--text-primary)]">{title}</p>
+      <p className="mt-1 max-w-xs text-xs leading-5 text-[var(--text-tertiary)]">{description}</p>
+    </div>
+  )
+}
+
 export default function ApplicationDetail({
   application,
   statuses,
@@ -28,495 +164,423 @@ export default function ApplicationDetail({
   onEdit,
   onDelete,
 }: ApplicationDetailProps) {
+  const supabase = useMemo(() => createClient(), [])
+  const panelRef = useRef<HTMLDivElement>(null)
+  const [activeTab, setActiveTab] = useState<DetailTab>('summary')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [history, setHistory] = useState<ApplicationHistory[]>([])
   const [tasks, setTasks] = useState<TodoTask[]>([])
+  const [dataLoading, setDataLoading] = useState(true)
+  const [dataError, setDataError] = useState<string | null>(null)
   const [isTodoFormOpen, setIsTodoFormOpen] = useState(false)
-  
-  const column = statuses.find(col => col.id === application.status)
-  const supabase = createClient()
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      const { data, error } = await supabase
+  const status = statuses.find(item => item.id === application.status)
+  const contacts = application.contacts || []
+  const sourceLabel = APPLICATION_SOURCES.find(source => source.value === application.source)?.label || application.source || 'Belirtilmedi'
+  const historyDisplay = useMemo(() => buildHistoryDisplay(history, statuses), [history, statuses])
+  const visibleHistory = historyDisplay.slice(0, 6)
+
+  const fetchRelatedData = useCallback(async () => {
+    setDataLoading(true)
+    setDataError(null)
+
+    const [historyResult, tasksResult] = await Promise.all([
+      supabase
         .from('application_history')
         .select('*')
         .eq('application_id', application.id)
-        .order('created_at', { ascending: false })
-      
-      if (data) {
-        setHistory(data)
-      }
-
-      const { data: tasksData } = await supabase
+        .order('created_at', { ascending: false }),
+      supabase
         .from('todo_tasks')
         .select('*')
         .eq('application_id', application.id)
-        .order('due_date', { ascending: true, nullsFirst: false })
-      
-      if (tasksData) {
-        setTasks(tasksData)
-      }
+        .order('due_date', { ascending: true, nullsFirst: false }),
+    ])
+
+    if (historyResult.error || tasksResult.error) {
+      setDataError('Geçmiş veya görev bilgileri yüklenemedi.')
     }
-    fetchHistory()
-  }, [application.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+    setHistory(historyResult.data || [])
+    setTasks(tasksResult.data || [])
+    setDataLoading(false)
+  }, [application.id, supabase])
+
+  useEffect(() => {
+    // Initial synchronization with the application's related remote records.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchRelatedData()
+  }, [fetchRelatedData])
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    panelRef.current?.focus()
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (showDeleteConfirm) {
+        setShowDeleteConfirm(false)
+        return
+      }
+      if (!isTodoFormOpen) onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isTodoFormOpen, onClose, showDeleteConfirm])
 
   const handleToggleTaskStatus = async (task: TodoTask) => {
-    const newStatus = task.status === 'completed' ? 'pending' : 'completed'
-    const completedAt = newStatus === 'completed' ? (task.completed_at || new Date().toISOString()) : null
+    const previousTasks = tasks
+    const nextStatus = task.status === 'completed' ? 'pending' : 'completed'
+    const completedAt = nextStatus === 'completed' ? new Date().toISOString() : null
 
-    // Optimistic update
-    setTasks(tasks.map(t => t.id === task.id ? { ...t, status: newStatus, completed_at: completedAt } : t))
-    
+    setTasks(current => current.map(item =>
+      item.id === task.id ? { ...item, status: nextStatus, completed_at: completedAt } : item
+    ))
+
     const { error } = await supabase
       .from('todo_tasks')
-      .update({ status: newStatus, completed_at: completedAt, updated_at: new Date().toISOString() })
+      .update({ status: nextStatus, completed_at: completedAt, updated_at: new Date().toISOString() })
       .eq('id', task.id)
 
     if (error) {
-      await supabase
-        .from('todo_tasks')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .eq('id', task.id)
+      setTasks(previousTasks)
+      setDataError('Görev durumu güncellenemedi. Değişiklik geri alındı.')
     }
   }
 
-  const pendingTasks = tasks.filter(t => t.status !== 'completed')
-  const completedTasks = tasks
-    .filter(t => t.status === 'completed')
-    .sort((a, b) => {
-      const timeA = new Date(a.completed_at || a.updated_at || a.created_at).getTime()
-      const timeB = new Date(b.completed_at || b.updated_at || b.created_at).getTime()
-      return timeB - timeA
-    })
-
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '—'
-    return new Date(dateStr).toLocaleDateString('tr-TR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
-  }
-
-  const isOverdue = application.follow_up_date 
-    && new Date(application.follow_up_date) < new Date()
-
-  const contacts = application.contacts || []
+  const pendingTasks = tasks.filter(task => task.status !== 'completed')
+  const completedTasks = tasks.filter(task => task.status === 'completed')
 
   return (
-    <div 
-      onClick={onClose} 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm overflow-y-auto"
-    >
+    <div className="fixed inset-0 z-[100] bg-black/55 backdrop-blur-[2px]" onMouseDown={event => {
+      if (event.target === event.currentTarget) onClose()
+    }}>
       <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl shadow-2xl my-auto"
-        style={{
-          backgroundColor: 'var(--bg-elevated)',
-          border: '1px solid var(--border-strong)',
-        }}
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="application-detail-title"
+        tabIndex={-1}
+        className="ml-auto flex h-full w-full max-w-[760px] flex-col border-l border-[var(--border-strong)] bg-[var(--bg-elevated)] shadow-[var(--shadow-lg)] outline-none motion-safe:animate-[slideInRight_180ms_ease-out]"
       >
-        {/* Üst renkli şerit (Kaldırıldı veya standart hale getirilebilir. Daha sade olması için kaldırıyoruz) */}
-
-        <div className="p-6">
-          <button
-            onClick={onClose}
-            className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
-            style={{ color: 'var(--text-tertiary)' }}
-          >✕</button>
-
-          {/* Durum badge */}
-          <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium" style={{ backgroundColor: 'var(--badge-bg)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}>
-            {column?.emoji} {column?.title}
-          </span>
-
-          {/* Şirket ve Pozisyon */}
-          <h2 className="mt-4 text-2xl font-semibold tracking-tight" style={{ color: 'var(--text-primary)' }}>{application.company_name}</h2>
-          <p className="mt-1 text-lg" style={{ color: 'var(--text-secondary)' }}>{application.position}</p>
-
-          {/* Temel Bilgiler */}
-          <div className="mt-8 space-y-3">
-            <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-              <span>📅</span>
-              <div>
-                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Başvuru Tarihi</p>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{formatDate(application.application_date)}</p>
+        <header className="shrink-0 border-b border-[var(--border)] px-5 pb-0 pt-5 sm:px-7 sm:pt-6">
+          <div className="flex items-start gap-4">
+            <CompanyLogo companyName={application.company_name} companyDomain={application.company_domain} size="lg" />
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--badge-bg)] px-2.5 py-1 text-[11px] font-semibold text-[var(--text-secondary)]">
+                  <span aria-hidden="true">{status?.emoji}</span>
+                  {status?.title || application.status}
+                </span>
+                <span className="text-[11px] font-medium text-[var(--text-tertiary)]">{formatDate(application.application_date)}</span>
               </div>
+              <h2 id="application-detail-title" className="mt-3 truncate text-xl font-bold tracking-[-0.025em] text-[var(--text-primary)] sm:text-2xl">
+                {application.company_name}
+              </h2>
+              <p className="mt-1 truncate text-sm font-medium text-[var(--text-secondary)] sm:text-base">{application.position}</p>
             </div>
-
-            {(application.cv_version || application.cv_file_url) && (
-              <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                <span>📄</span>
-                <div className="flex w-full items-center justify-between">
-                  <div>
-                    <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>CV Versiyonu</p>
-                    <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{application.cv_version || 'Belirtilmedi'}</p>
-                  </div>
-                  {application.cv_file_url && (
-                    <a 
-                      href={application.cv_file_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      download
-                      className="rounded-xl px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-80"
-                      style={{
-                        backgroundColor: 'var(--badge-bg)',
-                        border: '1px solid var(--border)',
-                        color: 'var(--text-primary)',
-                      }}
-                    >
-                      İndir / Görüntüle 📥
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {application.source && (
-              <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                <span>🔗</span>
-                <div>
-                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Kaynak</p>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{application.source}</p>
-                </div>
-              </div>
-            )}
-
-            {application.job_url && (
-              <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                <span>🌐</span>
-                <div>
-                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>İş İlanı</p>
-                  <a href={application.job_url} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-blue-400/90 hover:underline">
-                    İlanı Görüntüle ↗
-                  </a>
-                </div>
-              </div>
-            )}
-
-            {/* Metrikler */}
-            <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-              <span>🎯</span>
-              <div className="flex w-full items-center gap-4">
-                <div>
-                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Uyumluluk</p>
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {application.match_level === 'high' ? '🟢 Yüksek' : application.match_level === 'medium' ? '🟡 Orta' : '🔴 Düşük'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Takip tarihi */}
-            {application.follow_up_date && (
-              <div
-                className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${isOverdue ? 'border-red-500/20 bg-red-500/10' : ''}`}
-                style={!isOverdue ? { backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' } : undefined}
-              >
-                <span>{isOverdue ? '⚠️' : '🔔'}</span>
-                <div>
-                  <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Takip Tarihi</p>
-                  <p
-                    className={`text-sm font-medium ${isOverdue ? 'text-red-500' : ''}`}
-                    style={!isOverdue ? { color: 'var(--text-primary)' } : undefined}
-                  >
-                    {formatDate(application.follow_up_date)}
-                    {isOverdue && ' — Gecikti!'}
-                  </p>
-                </div>
-              </div>
-            )}
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Detay panelini kapat">
+              <X aria-hidden="true" size={18} />
+            </Button>
           </div>
 
-          {/* İLETİŞİM KİŞİLERİ */}
-          {contacts.length > 0 && (
-            <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-              <h3 className="mb-4 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                👤 İletişim Kişileri ({contacts.length})
-              </h3>
-              <div className="space-y-3">
-                {contacts.map((contact) => (
-                  <div
-                    key={contact.id}
-                    className="rounded-2xl p-4"
-                    style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}
+          <div className="mt-5 overflow-x-auto" role="tablist" aria-label="Başvuru detay bölümleri">
+            <div className="flex min-w-max gap-1">
+              {TABS.map(tab => {
+                const Icon = tab.icon
+                const count = tab.id === 'contacts' ? contacts.length : tab.id === 'tasks' ? tasks.length : null
+                return (
+                  <button
+                    key={tab.id}
+                    id={`tab-${tab.id}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={`panel-${tab.id}`}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`relative flex h-10 items-center gap-2 px-3 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)] ${
+                      activeTab === tab.id
+                        ? 'text-[var(--text-primary)] after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-[var(--accent)]'
+                        : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'
+                    }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex w-full items-start justify-between">
-                        <div>
-                          <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{contact.name}</p>
-                          {contact.role && <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{contact.role}</p>}
-                          {contact.email && (
-                            <a href={`mailto:${contact.email}`} className="text-xs text-blue-500 hover:underline">
-                              {contact.email}
-                            </a>
-                          )}
+                    <Icon aria-hidden="true" size={15} />
+                    {tab.label}
+                    {count !== null ? <span className="rounded-full bg-[var(--badge-bg)] px-1.5 py-0.5 text-[10px]">{count}</span> : null}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </header>
+
+        <main className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-7 sm:py-6">
+          {dataError ? (
+            <div className="mb-5 flex items-center gap-3 rounded-[10px] border border-[var(--danger)]/25 bg-[var(--danger-subtle)] px-4 py-3 text-xs font-medium text-[var(--danger)]" role="alert">
+              <AlertTriangle aria-hidden="true" size={16} />
+              {dataError}
+            </div>
+          ) : null}
+
+          {activeTab === 'summary' ? (
+            <section id="panel-summary" role="tabpanel" aria-labelledby="tab-summary" className="space-y-6">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+                    <CalendarDays aria-hidden="true" size={14} /> Başvuru tarihi
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">{formatDate(application.application_date)}</p>
+                </div>
+                <div className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+                    <Clock3 aria-hidden="true" size={14} /> Takip tarihi
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">{formatDate(application.follow_up_date)}</p>
+                </div>
+                <div className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+                    <BriefcaseBusiness aria-hidden="true" size={14} /> Uyum seviyesi
+                  </div>
+                  <span className={`mt-2 inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${matchStyles[application.match_level]}`}>
+                    {matchLabels[application.match_level]}
+                  </span>
+                </div>
+                <div className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--text-tertiary)]">
+                    <Link2 aria-hidden="true" size={14} /> Kaynak
+                  </div>
+                  <p className="mt-2 text-sm font-semibold text-[var(--text-primary)]">{sourceLabel}</p>
+                </div>
+              </div>
+
+              {(application.job_url || application.cv_file_url || application.cv_version) ? (
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--text-tertiary)]">Bağlantılar ve dosyalar</h3>
+                  <div className="mt-3 divide-y divide-[var(--border)] overflow-hidden rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)]">
+                    {application.job_url ? (
+                      <a href={application.job_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-3.5 text-sm font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-surface-hover)]">
+                        <ExternalLink aria-hidden="true" size={16} className="text-[var(--text-tertiary)]" />
+                        İlanı görüntüle
+                        <ExternalLink aria-hidden="true" size={13} className="ml-auto text-[var(--text-tertiary)]" />
+                      </a>
+                    ) : null}
+                    {(application.cv_file_url || application.cv_version) ? (
+                      <div className="flex items-center gap-3 px-4 py-3.5">
+                        <FileText aria-hidden="true" size={16} className="text-[var(--text-tertiary)]" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">{application.cv_version || 'Yüklenen CV'}</p>
+                          <p className="text-[11px] text-[var(--text-tertiary)]">Bu başvuruda kullanılan özgeçmiş</p>
                         </div>
-                        {contact.linkedin_url && (
-                          <a 
-                            href={contact.linkedin_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 transition-colors hover:bg-blue-500 hover:text-white"
-                            title="LinkedIn Profili"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                            </svg>
+                        {application.cv_file_url ? (
+                          <a href={application.cv_file_url} target="_blank" rel="noopener noreferrer" className="flex h-8 items-center gap-1.5 rounded-[7px] border border-[var(--border)] px-2.5 text-xs font-semibold text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)]">
+                            <Download aria-hidden="true" size={13} /> Aç
                           </a>
-                        )}
+                        ) : null}
                       </div>
-                    </div>
-
-                    {/* Mesaj / Mail durumu */}
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border ${
-                          contact.message_sent 
-                            ? 'border-green-500/20 bg-green-500/10 text-green-500' 
-                            : ''
-                        }`}
-                        style={!contact.message_sent ? { backgroundColor: 'var(--badge-bg)', borderColor: 'var(--border)', color: 'var(--text-secondary)' } : undefined}
-                      >
-                        💬 {contact.message_sent 
-                          ? `Mesaj gönderildi${contact.message_date ? ` • ${formatDate(contact.message_date)}` : ''}`
-                          : 'Mesaj gönderilmedi'
-                        }
-                      </span>
-
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium border ${
-                          contact.email_sent 
-                            ? 'border-purple-500/20 bg-purple-500/10 text-purple-500' 
-                            : ''
-                        }`}
-                        style={!contact.email_sent ? { backgroundColor: 'var(--badge-bg)', borderColor: 'var(--border)', color: 'var(--text-secondary)' } : undefined}
-                      >
-                        📧 {contact.email_sent 
-                          ? `Mail gönderildi${contact.email_date ? ` • ${formatDate(contact.email_date)}` : ''}`
-                          : 'Mail gönderilmedi'
-                        }
-                      </span>
-                    </div>
-
-                    {contact.notes && (
-                      <p className="mt-2 text-xs text-slate-500 italic">💭 {contact.notes}</p>
-                    )}
+                    ) : null}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+              ) : null}
 
-          {/* Notlar */}
-          {application.notes && (
-            <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-              <h3 className="mb-3 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>📝 Notlar</h3>
-              <div
-                className="tiptap-editor rounded-2xl p-4 text-sm"
-                style={{
-                  backgroundColor: 'var(--bg-surface)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-secondary)',
-                }}
-                dangerouslySetInnerHTML={{ __html: application.notes }}
-              />
-            </div>
-          )}
-
-          {/* Görevler (To-Do) */}
-          <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>✅ Görevler</h3>
-              <button 
-                onClick={() => setIsTodoFormOpen(true)}
-                className="text-xs font-medium text-blue-500 hover:underline"
-              >
-                + Görev Ekle
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              
-              {/* Yapılacaklar */}
-              <div className="space-y-2">
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Yapılacaklar</h4>
-                {pendingTasks.length === 0 ? (
-                  <p className="text-xs italic text-slate-400">Henüz yapılacak görev yok.</p>
+              <div>
+                <div className="flex items-center gap-2">
+                  <History aria-hidden="true" size={15} className="text-[var(--text-tertiary)]" />
+                  <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-[var(--text-tertiary)]">Başvuru geçmişi</h3>
+                </div>
+                {dataLoading ? (
+                  <div className="mt-3 space-y-2" aria-label="Geçmiş yükleniyor">
+                    <div className="h-14 animate-pulse rounded-[10px] bg-[var(--bg-surface)]" />
+                    <div className="h-14 animate-pulse rounded-[10px] bg-[var(--bg-surface)]" />
+                  </div>
+                ) : history.length === 0 ? (
+                  <p className="mt-3 rounded-[10px] border border-dashed border-[var(--border)] px-4 py-5 text-center text-xs text-[var(--text-tertiary)]">Henüz geçmiş kaydı yok.</p>
                 ) : (
-                  pendingTasks.map(task => (
-                    <div key={task.id} className="flex items-center justify-between rounded-xl p-3 border transition-colors hover:shadow-sm" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
-                      <div className="flex items-center gap-3">
-                        <button 
-                          onClick={() => handleToggleTaskStatus(task)}
-                          className="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-slate-300 transition-colors hover:border-blue-400"
-                        />
-                        <span className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-                          {task.title}
-                        </span>
+                  <div className="mt-3 space-y-2">
+                    {visibleHistory.map(item => (
+                      <div key={item.id} className="flex gap-3 rounded-[10px] border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3">
+                        <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${item.isReverted ? 'bg-[var(--text-tertiary)]' : 'bg-[var(--accent)]'}`} aria-hidden="true" />
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-xs font-semibold leading-5 text-[var(--text-primary)]">{item.label}</p>
+                            {item.changeCount > 1 ? (
+                              <span className="rounded-full bg-[var(--badge-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--text-tertiary)]">{item.changeCount} hareket</span>
+                            ) : null}
+                          </div>
+                          <p className="mt-0.5 text-[10px] text-[var(--text-tertiary)]">{formatDate(item.createdAt, true)}</p>
+                        </div>
                       </div>
-                      {task.due_date && (
-                        <span className="text-[10px] font-medium opacity-70" style={{ color: 'var(--text-tertiary)' }}>
-                          {new Date(task.due_date).toLocaleDateString('tr-TR')}
-                        </span>
-                      )}
-                    </div>
-                  ))
+                    ))}
+                    {historyDisplay.length > visibleHistory.length ? (
+                      <p className="pt-1 text-center text-[10px] font-medium text-[var(--text-tertiary)]">En son {visibleHistory.length} değişiklik grubu gösteriliyor.</p>
+                    ) : null}
+                  </div>
                 )}
               </div>
+            </section>
+          ) : null}
 
-              {/* Tamamlananlar */}
-              <div className="space-y-2 mt-4">
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Tamamlananlar</h4>
-                {completedTasks.length === 0 ? (
-                  <p className="text-xs italic text-slate-400">Henüz tamamlanan görev yok.</p>
-                ) : (
-                  completedTasks.map(task => (
-                    <div key={task.id} className="flex flex-col gap-1 rounded-xl p-3 border opacity-75" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border)' }}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <button 
-                            onClick={() => handleToggleTaskStatus(task)}
-                            className="flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 border-emerald-500 bg-emerald-500 text-white transition-colors"
-                          >
-                            ✓
+          {activeTab === 'contacts' ? (
+            <section id="panel-contacts" role="tabpanel" aria-labelledby="tab-contacts">
+              {contacts.length === 0 ? (
+                <EmptyState icon={UsersRound} title="İletişim kişisi yok" description="Bu başvuruya kişi eklemek için düzenleme ekranını kullanabilirsin." />
+              ) : (
+                <div className="space-y-3">
+                  {contacts.map(contact => (
+                    <article key={contact.id} className="rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[9px] border border-[var(--border)] bg-[var(--bg-elevated)] text-[var(--text-tertiary)]">
+                          <UserRound aria-hidden="true" size={16} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-[var(--text-primary)]">{contact.name}</p>
+                          <p className="mt-0.5 text-[13px] text-[var(--text-tertiary)]">{contact.role || 'Rol belirtilmedi'}</p>
+                          <div className="mt-2 space-y-1.5">
+                            {contact.email ? (
+                              <a href={`mailto:${contact.email}`} className="flex w-fit items-center gap-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:underline">
+                                <Mail aria-hidden="true" size={13} /> {contact.email}
+                              </a>
+                            ) : null}
+                            {contact.phone ? (
+                              <a href={`tel:${contact.phone}`} className="flex w-fit items-center gap-2 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:underline">
+                                <Phone aria-hidden="true" size={13} /> {contact.phone}
+                              </a>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          {contact.linkedin_url ? (
+                            <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-[7px] text-[var(--text-tertiary)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)]" aria-label={`${contact.name} LinkedIn profilini aç`}>
+                              <ExternalLink aria-hidden="true" size={15} />
+                            </a>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--border)] pt-3">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--badge-bg)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                          <MessageSquare aria-hidden="true" size={12} /> {contact.message_sent ? `Mesaj gönderildi${contact.message_date ? ` · ${formatDate(contact.message_date)}` : ''}` : 'Mesaj bekliyor'}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--badge-bg)] px-2.5 py-1 text-[11px] font-medium text-[var(--text-secondary)]">
+                          <Mail aria-hidden="true" size={12} /> {contact.email_sent ? `E-posta gönderildi${contact.email_date ? ` · ${formatDate(contact.email_date)}` : ''}` : 'E-posta bekliyor'}
+                        </span>
+                      </div>
+                      {contact.notes ? <p className="mt-3 text-xs leading-5 text-[var(--text-secondary)]">{contact.notes}</p> : null}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          ) : null}
+
+          {activeTab === 'notes' ? (
+            <section id="panel-notes" role="tabpanel" aria-labelledby="tab-notes">
+              {application.notes ? (
+                <div className="tiptap-editor rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] p-5 text-sm leading-6 text-[var(--text-secondary)]" dangerouslySetInnerHTML={{ __html: application.notes }} />
+              ) : (
+                <EmptyState icon={NotebookPen} title="Henüz not eklenmemiş" description="Görüşme hazırlıkları ve önemli ayrıntıları düzenleme ekranından ekleyebilirsin." />
+              )}
+            </section>
+          ) : null}
+
+          {activeTab === 'tasks' ? (
+            <section id="panel-tasks" role="tabpanel" aria-labelledby="tab-tasks">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-[var(--text-primary)]">Başvuru görevleri</h3>
+                  <p className="mt-0.5 text-xs text-[var(--text-tertiary)]">{pendingTasks.length} açık, {completedTasks.length} tamamlandı</p>
+                </div>
+                <Button variant="secondary" size="sm" onClick={() => setIsTodoFormOpen(true)}>
+                  <Plus aria-hidden="true" size={14} /> Görev ekle
+                </Button>
+              </div>
+              {dataLoading ? (
+                <div className="space-y-2" aria-label="Görevler yükleniyor">
+                  <div className="h-14 animate-pulse rounded-[10px] bg-[var(--bg-surface)]" />
+                  <div className="h-14 animate-pulse rounded-[10px] bg-[var(--bg-surface)]" />
+                </div>
+              ) : tasks.length === 0 ? (
+                <EmptyState icon={CheckSquare2} title="Henüz görev yok" description="Bu başvuru için bir sonraki adımı görev olarak ekleyebilirsin." />
+              ) : (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <h4 className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-tertiary)]">Açık görevler</h4>
+                    {pendingTasks.length === 0 ? <p className="text-xs text-[var(--text-tertiary)]">Tüm görevler tamamlandı.</p> : pendingTasks.map(task => (
+                      <div key={task.id} className="flex items-center gap-3 rounded-[10px] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-3">
+                        <button type="button" onClick={() => void handleToggleTaskStatus(task)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] border-2 border-[var(--border-strong)] hover:border-[var(--accent)]" aria-label={`${task.title} görevini tamamla`} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-semibold text-[var(--text-primary)]">{task.title}</p>
+                          {task.due_date ? <p className="mt-0.5 text-[10px] text-[var(--text-tertiary)]">{formatDate(task.due_date)}</p> : null}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {completedTasks.length > 0 ? (
+                    <div className="space-y-2">
+                      <h4 className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--text-tertiary)]">Tamamlananlar</h4>
+                      {completedTasks.map(task => (
+                        <div key={task.id} className="flex items-center gap-3 rounded-[10px] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-3 opacity-70">
+                          <button type="button" onClick={() => void handleToggleTaskStatus(task)} className="flex h-5 w-5 shrink-0 items-center justify-center rounded-[5px] bg-[var(--accent)] text-white" aria-label={`${task.title} görevini yeniden aç`}>
+                            <Check aria-hidden="true" size={13} />
                           </button>
-                          <span className="text-xs font-medium line-through" style={{ color: 'var(--text-primary)' }}>
-                            {task.title}
-                          </span>
+                          <p className="min-w-0 flex-1 truncate text-xs font-semibold text-[var(--text-secondary)] line-through">{task.title}</p>
                         </div>
-                      </div>
-                      {(task.completed_at || task.updated_at) && (
-                        <div className="ml-8 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                          ✅ Tamamlanma Saati: {new Date(task.completed_at || task.updated_at).toLocaleString('tr-TR', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </div>
-                      )}
+                      ))}
                     </div>
-                  ))
-                )}
-              </div>
+                  ) : null}
+                </div>
+              )}
+            </section>
+          ) : null}
+        </main>
 
-            </div>
-          </div>
-
-          {/* Geçmiş / Timeline */}
-          <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-            <h3 className="mb-4 text-sm font-medium" style={{ color: 'var(--text-primary)' }}>⏳ Serüven (Geçmiş)</h3>
-            
-            {history.length === 0 ? (
-              <p className="text-xs italic text-slate-500">Henüz bir geçmiş kaydı yok.</p>
-            ) : (
-              <div className="relative space-y-4 before:absolute before:inset-0 before:ml-2 before:h-full before:w-0.5 before:-translate-x-px before:bg-[var(--border)]">
-                {history.map((item) => (
-                  <div key={item.id} className="relative flex items-start gap-4">
-                    {/* Yuvarlak Node */}
-                    <div className="relative z-10 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--bg-elevated)] shadow-[0_0_0_4px_var(--bg-elevated)] ring-1 ring-[var(--border-strong)] mt-1">
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                    </div>
-                    {/* İçerik */}
-                    <div className="flex-1 rounded-2xl p-3" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-                      <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{item.description}</p>
-                      
-                      {(item.old_status || item.new_status) && item.event_type === 'STATUS_CHANGED' && (
-                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[10px]">
-                          <p className="text-sm">
-                            {item.old_status && <span>{statuses.find(c => c.id === item.old_status)?.title || item.old_status}</span>}
-                            {item.old_status && <span className="mx-2 text-slate-500">→</span>}
-                            {item.new_status && <span className="text-blue-500">{statuses.find(c => c.id === item.new_status)?.title || item.new_status}</span>}
-                          </p>
-                        </div>
-                      )}
-
-                      <p className="mt-1.5 text-[10px] opacity-60" style={{ color: 'var(--text-tertiary)' }}>
-                        {new Date(item.created_at).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Aksiyon Butonları */}
-          <div className="mt-8 flex gap-3 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-            <button
-              onClick={() => setIsTodoFormOpen(true)}
-              className="flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors hover:bg-blue-500/10 hover:text-blue-500"
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              ⏰ Hatırlatıcı Kur
-            </button>
-
-            <button
-              onClick={() => onEdit(application)}
-              className="flex-1 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
-              style={{
-                backgroundColor: 'var(--bg-surface)',
-                border: '1px solid var(--border)',
-                color: 'var(--text-primary)',
-              }}
-            >
-              Düzenle
-            </button>
-
-            {!showDeleteConfirm ? (
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="rounded-xl border border-red-500/20 px-4 py-2.5 text-sm font-medium text-red-500 transition-colors hover:bg-red-500/10"
-              >
-                Sil
-              </button>
-            ) : (
-              <div className="flex gap-2">
-                <button onClick={() => onDelete(application.id)} className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-red-600">
-                  Evet, Sil
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
-                  style={{
-                    border: '1px solid var(--border)',
-                    color: 'var(--text-secondary)',
-                  }}
-                >
-                  İptal
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <footer className="flex shrink-0 items-center gap-2 border-t border-[var(--border)] bg-[var(--bg-elevated)] px-5 py-4 sm:px-7">
+          <Button variant="danger" size="icon" onClick={() => setShowDeleteConfirm(true)} aria-label="Başvuruyu sil">
+            <Trash2 aria-hidden="true" size={16} />
+          </Button>
+          <Button variant="secondary" className="ml-auto" onClick={onClose}>Kapat</Button>
+          <Button variant="primary" onClick={() => onEdit(application)}>
+            <Pencil aria-hidden="true" size={15} /> Düzenle
+          </Button>
+        </footer>
       </div>
 
-      {isTodoFormOpen && (
+      {showDeleteConfirm ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/65 p-4" role="presentation" onMouseDown={event => {
+          if (event.target === event.currentTarget) setShowDeleteConfirm(false)
+        }}>
+          <div role="alertdialog" aria-modal="true" aria-labelledby="delete-title" aria-describedby="delete-description" className="w-full max-w-sm rounded-[14px] border border-[var(--border-strong)] bg-[var(--bg-elevated)] p-5 shadow-[var(--shadow-lg)]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-[var(--danger-subtle)] text-[var(--danger)]">
+              <AlertTriangle aria-hidden="true" size={19} />
+            </div>
+            <h3 id="delete-title" className="mt-4 text-base font-bold text-[var(--text-primary)]">Başvuruyu sil?</h3>
+            <p id="delete-description" className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
+              {application.company_name} — {application.position} kaydı kalıcı olarak silinecek. Bu işlem geri alınamaz.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} autoFocus>Vazgeç</Button>
+              <Button variant="danger" onClick={() => onDelete(application.id)}>
+                <Trash2 aria-hidden="true" size={15} /> Evet, sil
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {isTodoFormOpen ? (
         <TodoForm
           editingTodo={null}
           preselectedApplicationId={application.id}
           onClose={() => setIsTodoFormOpen(false)}
           onSave={() => {
             setIsTodoFormOpen(false)
-            // Trigger fetch again
-            supabase
-              .from('todo_tasks')
-              .select('*')
-              .eq('application_id', application.id)
-              .order('due_date', { ascending: true, nullsFirst: false })
-              .then(({ data }) => {
-                if (data) setTasks(data)
-              })
+            void fetchRelatedData()
           }}
         />
-      )}
+      ) : null}
     </div>
   )
 }

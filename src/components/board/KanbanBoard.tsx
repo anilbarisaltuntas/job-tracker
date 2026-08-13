@@ -1,121 +1,110 @@
 'use client'
 
-/**
- * KANBAN BOARD — Ana Board Bileşeni
- * 
- * Bu bileşen tüm Kanban mantığını yönetir:
- * 1. Supabase'den başvuruları çeker
- * 2. Sütunlara dağıtır
- * 3. Sürükle-bırak ile durum değişikliğini yönetir
- * 4. CRUD modal'larını kontrol eder
- * 
- * STATE YÖNETİMİ:
- * - applications: tüm başvuru listesi
- * - selectedApp: detay/düzenleme için seçilen başvuru
- * - isFormOpen: yeni başvuru modal'ı açık mı?
- * - defaultStatus: yeni başvuru hangi sütuna eklenecek?
- */
-
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd'
+import {
+  Filter,
+  LayoutGrid,
+  List,
+  Plus,
+  Search,
+  X,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { Application, ApplicationStatus } from '@/lib/types'
+import { Application, ApplicationStatus, MatchLevel } from '@/lib/types'
+import { useStatuses } from '@/hooks/useStatuses'
+import { Button } from '@/components/ui/Button'
+import { FeedbackBanner } from '@/components/ui/FeedbackBanner'
+import { Skeleton } from '@/components/ui/Skeleton'
 import KanbanColumn from './KanbanColumn'
 import ApplicationForm from '../applications/ApplicationForm'
 import ApplicationDetail from '../applications/ApplicationDetail'
 import TableView from './TableView'
-import { useStatuses } from '@/hooks/useStatuses'
+
+type ViewMode = 'kanban' | 'table'
+type MatchFilter = MatchLevel | 'all'
+
+function BoardSkeleton() {
+  return (
+    <div className="-mx-4 overflow-hidden px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" aria-label="Başvurular yükleniyor" role="status">
+      <div className="flex gap-4 pb-8">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div key={index} className="h-[560px] w-[300px] min-w-[300px] shrink-0 rounded-[12px] border border-[var(--border)] bg-[var(--bg-column)] p-2 sm:w-[320px] sm:min-w-[320px] lg:w-[calc(25vw-51px)] lg:min-w-[300px]">
+            <Skeleton className="h-11" />
+            <div className="mt-3 space-y-2.5">
+              {Array.from({ length: 3 }, (_, cardIndex) => (
+                <Skeleton key={cardIndex} className="h-36 rounded-[12px]" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function KanbanBoard() {
-  // ===== STATE (Durum Değişkenleri) =====
-  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban')
-  const [applications, setApplications] = useState<Application[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isFormOpen, setIsFormOpen] = useState(false)           // Yeni başvuru formu açık mı?
-  const [selectedApp, setSelectedApp] = useState<Application | null>(null)  // Detay görüntüleme
-  const [editingApp, setEditingApp] = useState<Application | null>(null)    // Düzenleme
-  const [defaultStatus, setDefaultStatus] = useState<ApplicationStatus>('applied_message_pending')
-
+  const supabase = useMemo(() => createClient(), [])
   const { statuses, loading: statusesLoading } = useStatuses()
 
-  // Filtreleme State'leri
+  const [viewMode, setViewMode] = useState<ViewMode>('kanban')
+  const [matchFilter, setMatchFilter] = useState<MatchFilter>('all')
+  const [applications, setApplications] = useState<Application[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null)
+  const [editingApp, setEditingApp] = useState<Application | null>(null)
+  const [defaultStatus, setDefaultStatus] = useState<ApplicationStatus>('applied_message_pending')
   const [searchQuery, setSearchQuery] = useState('')
-  const [filterOverdue, setFilterOverdue] = useState(false)
 
-  const supabase = createClient()
-
-  // ===== VERİ ÇEKME =====
-  /**
-   * useCallback → Bu fonksiyonu "ezberler", her render'da yeniden oluşturmaz.
-   * Bu önemli çünkü useEffect içinde kullanıyoruz.
-   */
   const fetchApplications = useCallback(async () => {
-    // contacts(*) → her başvurunun iletişim kişilerini de getir (JOIN)
-    const { data, error } = await supabase
+    setLoading(true)
+    setError(null)
+
+    const { data, error: fetchError } = await supabase
       .from('applications')
       .select('*, contacts(*)')
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Başvurular yüklenirken hata:', error)
+    if (fetchError) {
+      setError('Başvurular yüklenemedi. Bağlantını kontrol edip tekrar deneyebilirsin.')
     } else {
       setApplications(data || [])
     }
     setLoading(false)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [supabase])
 
-  /**
-   * useEffect → Bileşen ilk yüklendiğinde çalışır.
-   * Boş dizi [] → "sadece bir kere çalış" demek.
-   * Sayfa her render olduğunda değil, ilk açıldığında veri çeker.
-   */
   useEffect(() => {
-    fetchApplications()
+    // Initial remote data synchronization.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchApplications()
   }, [fetchApplications])
 
-  // ===== SÜRÜKLE-BIRAK =====
-  /**
-   * Kullanıcı bir kartı sürükleyip bıraktığında çalışır.
-   * 
-   * result objesi şunları içerir:
-   * - source: kartın NEREDEN geldiği (sütun + index)
-   * - destination: kartın NEREYE bırakıldığı (sütun + index)
-   * - draggableId: sürüklenen kartın ID'si
-   */
   const handleDragEnd = async (result: DropResult) => {
+    setIsDragging(false)
     const { source, destination, draggableId } = result
-
-    // Geçerli bir yere bırakılmadıysa hiçbir şey yapma
     if (!destination) return
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return
 
-    // Aynı yere bırakıldıysa hiçbir şey yapma
-    if (
-      source.droppableId === destination.droppableId &&
-      source.index === destination.index
-    ) return
+    const movedApplication = applications.find(application => application.id === draggableId)
+    if (!movedApplication) return
 
-    // ===== İYİMSER GÜNCELLEME (Optimistic Update) =====
-    // Önce UI'ı anında güncelle, sonra veritabanını güncelle.
-    // Böylece kullanıcı "gecikmesiz" bir deneyim yaşar.
-    // Hata olursa geri alırız.
+    const previousApplications = applications
+    const updatedApplications = applications.map(application =>
+      application.id === draggableId
+        ? {
+            ...application,
+            status: destination.droppableId as ApplicationStatus,
+            kanban_order: destination.index,
+          }
+        : application
+    )
+    setApplications(updatedApplications)
+    setError(null)
 
-    const updatedApps = [...applications]
-    const movedApp = updatedApps.find(app => app.id === draggableId)
-    if (!movedApp) return
-
-    // Eski durumu kaydet (hata olursa geri almak için)
-    const oldStatus = movedApp.status
-    const oldOrder = movedApp.kanban_order
-
-    // Yeni durumu ve sırayı ayarla
-    movedApp.status = destination.droppableId as ApplicationStatus
-    movedApp.kanban_order = destination.index
-
-    // UI'ı anında güncelle
-    setApplications(updatedApps)
-
-    // Veritabanını güncelle
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from('applications')
       .update({
         status: destination.droppableId,
@@ -123,190 +112,195 @@ export default function KanbanBoard() {
       })
       .eq('id', draggableId)
 
-    if (error) {
-      console.error('Durum güncellenirken hata:', error)
-      // Hata olursa eski duruma geri dön
-      movedApp.status = oldStatus
-      movedApp.kanban_order = oldOrder
-      setApplications([...updatedApps])
+    if (updateError) {
+      setApplications(previousApplications)
+      setError('Kart taşınamadı. Değişiklik geri alındı.')
     }
   }
 
-  // ===== CRUD İŞLEMLERİ =====
   const handleAddClick = (status: ApplicationStatus) => {
     setDefaultStatus(status)
     setEditingApp(null)
     setIsFormOpen(true)
   }
 
-  const handleCardClick = (app: Application) => {
-    setSelectedApp(app)
+  const handleAddFromToolbar = () => {
+    const firstStatus = statuses[0]?.id
+    handleAddClick(firstStatus || defaultStatus)
   }
 
-  const handleEdit = (app: Application) => {
+  const handleEdit = (application: Application) => {
     setSelectedApp(null)
-    setEditingApp(app)
+    setEditingApp(application)
     setIsFormOpen(true)
   }
 
-  const handleDelete = async (appId: string) => {
-    const { error } = await supabase
+  const handleDelete = async (applicationId: string) => {
+    const { error: deleteError } = await supabase
       .from('applications')
       .delete()
-      .eq('id', appId)
+      .eq('id', applicationId)
 
-    if (!error) {
-      setApplications(prev => prev.filter(app => app.id !== appId))
-      setSelectedApp(null)
+    if (deleteError) {
+      setError('Başvuru silinemedi. Lütfen tekrar deneyin.')
+      return
     }
+
+    setApplications(current => current.filter(application => application.id !== applicationId))
+    setSelectedApp(null)
   }
 
-  const handleBulkDelete = async (appIds: string[]) => {
-    const { error } = await supabase
+  const handleBulkDelete = async (applicationIds: string[]) => {
+    const { error: deleteError } = await supabase
       .from('applications')
       .delete()
-      .in('id', appIds)
+      .in('id', applicationIds)
 
-    if (!error) {
-      setApplications(prev => prev.filter(app => !appIds.includes(app.id)))
-      setSelectedApp(null)
+    if (deleteError) {
+      setError('Seçilen başvurular silinemedi.')
+      return
     }
+
+    setApplications(current => current.filter(application => !applicationIds.includes(application.id)))
+    setSelectedApp(null)
   }
 
-  const handleBulkStatusUpdate = async (appIds: string[], newStatus: ApplicationStatus) => {
-    const { error } = await supabase
+  const handleBulkStatusUpdate = async (applicationIds: string[], newStatus: ApplicationStatus) => {
+    const { error: updateError } = await supabase
       .from('applications')
       .update({ status: newStatus })
-      .in('id', appIds)
+      .in('id', applicationIds)
 
-    if (!error) {
-      setApplications(prev => prev.map(app => 
-        appIds.includes(app.id) ? { ...app, status: newStatus } : app
-      ))
+    if (updateError) {
+      setError('Seçilen başvuruların durumu güncellenemedi.')
+      return
     }
+
+    setApplications(current => current.map(application =>
+      applicationIds.includes(application.id)
+        ? { ...application, status: newStatus }
+        : application
+    ))
   }
 
   const handleFormSuccess = () => {
     setIsFormOpen(false)
     setEditingApp(null)
-    fetchApplications() // Listeyi yenile
+    void fetchApplications()
   }
 
-  // ===== FİLTRELEME MANTIĞI =====
-  const filteredApplications = applications.filter(app => {
-    const search = searchQuery.toLocaleLowerCase('tr-TR')
-    const matchesSearch = 
-      app.company_name.toLocaleLowerCase('tr-TR').includes(search) ||
-      app.position.toLocaleLowerCase('tr-TR').includes(search)
-    
-    const isOverdue = app.follow_up_date && new Date(app.follow_up_date) < new Date()
-    const matchesOverdue = filterOverdue ? isOverdue : true
-
-    return matchesSearch && matchesOverdue
+  const normalizedSearch = searchQuery.trim().toLocaleLowerCase('tr-TR')
+  const filteredApplications = applications.filter(application => {
+    const matchesSearch =
+      !normalizedSearch ||
+      application.company_name.toLocaleLowerCase('tr-TR').includes(normalizedSearch) ||
+      application.position.toLocaleLowerCase('tr-TR').includes(normalizedSearch)
+    const matchesLevel = matchFilter === 'all' || application.match_level === matchFilter
+    return matchesSearch && matchesLevel
   })
-
-// ===== RENDER =====
-  if (loading || statusesLoading) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="flex items-center gap-3" style={{ color: 'var(--text-tertiary)' }}>
-          <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          Panonuz hazırlanıyor...
-        </div>
-      </div>
-    )
-  }
+  const hasActiveFilters = Boolean(normalizedSearch) || matchFilter !== 'all'
 
   return (
     <>
-      {/* Arama ve Filtreleme Çubuğu */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-md">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-          <input
-            type="text"
-            placeholder="Şirket veya pozisyon ara..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none transition-all focus:ring-2 focus:ring-blue-500/50"
-            style={{
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-primary)',
-            }}
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Görünüm Değiştirici */}
-          <div className="flex items-center rounded-xl p-1" style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border)' }}>
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                viewMode === 'kanban' 
-                  ? 'bg-blue-500/10 text-blue-500' 
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-              style={viewMode === 'kanban' ? { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' } : { color: 'var(--text-tertiary)' }}
-            >
-              📋 Pano
-            </button>
-            <button
-              onClick={() => setViewMode('table')}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                viewMode === 'table' 
-                  ? 'bg-blue-500/10 text-blue-500' 
-                  : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-              }`}
-              style={viewMode === 'table' ? { backgroundColor: 'var(--bg-elevated)', color: 'var(--text-primary)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' } : { color: 'var(--text-tertiary)' }}
-            >
-              🗂️ Liste
-            </button>
+      <div className="sticky top-[68px] z-20 -mx-4 mb-5 border-y border-[var(--border)] bg-[var(--bg-header)] px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
+            <div className="relative w-full sm:max-w-sm">
+              <Search aria-hidden="true" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+              <input
+                type="search"
+                placeholder="Şirket veya pozisyon ara"
+                value={searchQuery}
+                onChange={event => setSearchQuery(event.target.value)}
+                className="h-10 w-full rounded-[8px] border border-[var(--input-border)] bg-[var(--input-bg)] pl-9 pr-9 text-sm text-[var(--text-primary)] outline-none placeholder:text-[var(--text-tertiary)]"
+                aria-label="Başvurularda ara"
+              />
+              {searchQuery ? (
+                <button type="button" onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-[6px] text-[var(--text-tertiary)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)]" aria-label="Aramayı temizle">
+                  <X aria-hidden="true" size={14} />
+                </button>
+              ) : null}
+            </div>
+
+            <div className="relative w-full sm:w-44">
+              <Filter aria-hidden="true" size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+              <select
+                value={matchFilter}
+                onChange={event => setMatchFilter(event.target.value as MatchFilter)}
+                className="h-10 w-full appearance-none rounded-[8px] border border-[var(--input-border)] bg-[var(--input-bg)] pl-9 pr-8 text-sm font-medium text-[var(--text-secondary)] outline-none"
+                aria-label="Uyum seviyesine göre filtrele"
+              >
+                <option value="all">Tüm uyumlar</option>
+                <option value="high">Yüksek uyum</option>
+                <option value="medium">Orta uyum</option>
+                <option value="low">Düşük uyum</option>
+              </select>
+            </div>
           </div>
 
-          <button
-            onClick={() => setFilterOverdue(!filterOverdue)}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
-              filterOverdue 
-                ? 'border-red-500 bg-red-500/10 text-red-500' 
-                : 'opacity-80 hover:opacity-100'
-            }`}
-            style={!filterOverdue ? {
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-primary)',
-            } : { border: '1px solid currentColor' }}
-          >
-            {filterOverdue ? '⚠️ Sadece Gecikenler Açık' : '🔔 Gecikenleri Göster'}
-          </button>
+          <div className="flex items-center justify-between gap-2 sm:justify-end">
+            <span className="mr-auto whitespace-nowrap text-xs font-semibold text-[var(--text-tertiary)] sm:mr-2">
+              {filteredApplications.length} kayıt
+            </span>
+            <div className="flex items-center rounded-[9px] border border-[var(--border)] bg-[var(--bg-surface)] p-0.5 shadow-[var(--shadow-xs)]" aria-label="Görünüm seçimi">
+              <button type="button" onClick={() => setViewMode('kanban')} aria-pressed={viewMode === 'kanban'} className={`flex h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-xs font-semibold transition-colors ${viewMode === 'kanban' ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-xs)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>
+                <LayoutGrid aria-hidden="true" size={16} />
+                Pano
+              </button>
+              <button type="button" onClick={() => setViewMode('table')} aria-pressed={viewMode === 'table'} className={`flex h-8 items-center gap-1.5 rounded-[6px] px-2.5 text-xs font-semibold transition-colors ${viewMode === 'table' ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--shadow-xs)]' : 'text-[var(--text-tertiary)] hover:text-[var(--text-primary)]'}`}>
+                <List aria-hidden="true" size={16} />
+                Liste
+              </button>
+            </div>
+            <Button variant="primary" size="sm" className="!text-sm" onClick={handleAddFromToolbar} disabled={statusesLoading || statuses.length === 0}>
+              <Plus aria-hidden="true" size={16} />
+              <span className="hidden sm:inline">Yeni Başvuru</span>
+            </Button>
+          </div>
         </div>
       </div>
 
-      {viewMode === 'kanban' ? (
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 gap-6 pb-8 sm:grid-cols-2 xl:grid-cols-4">
-            {statuses.map(column => {
-              // Bu sütuna ait başvuruları filtrele
-              const columnApps = filteredApplications
-                .filter(app => app.status === column.id)
-                .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())
+      {error ? (
+        <FeedbackBanner message={error} onRetry={() => void fetchApplications()} onDismiss={() => setError(null)} className="mb-4" />
+      ) : null}
 
-              return (
-                <KanbanColumn
-                  key={column.id}
-                  columnId={column.id}
-                  title={column.title}
-                  emoji={column.emoji}
-                  color={column.color}
-                  bgColor={column.bg_color}
-                  applications={columnApps}
-                  onCardClick={handleCardClick}
-                  onAddClick={() => handleAddClick(column.id)}
-                />
-              )
-            })}
+      {loading || statusesLoading ? (
+        <BoardSkeleton />
+      ) : hasActiveFilters && filteredApplications.length === 0 ? (
+        <div className="mb-5 flex items-center justify-between gap-4 rounded-[10px] border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] px-4 py-4">
+          <div>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">Eşleşen başvuru bulunamadı</p>
+            <p className="mt-0.5 text-xs text-[var(--text-tertiary)]">Arama metnini veya uyum filtresini değiştirebilirsin.</p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => { setSearchQuery(''); setMatchFilter('all') }}>Filtreleri temizle</Button>
+        </div>
+      ) : viewMode === 'kanban' ? (
+        <DragDropContext onDragStart={() => setIsDragging(true)} onDragEnd={handleDragEnd}>
+          <div className={`-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 ${isDragging ? 'cursor-grabbing' : ''}`}>
+            <div className="flex w-max items-start gap-4">
+              {statuses.map(status => {
+                const columnApplications = filteredApplications
+                  .filter(application => application.status === status.id)
+                  .toSorted((first, second) => {
+                    const orderDifference = first.kanban_order - second.kanban_order
+                    if (orderDifference !== 0) return orderDifference
+                    return new Date(second.created_at).getTime() - new Date(first.created_at).getTime()
+                  })
+
+                return (
+                  <KanbanColumn
+                    key={status.id}
+                    columnId={status.id}
+                    title={status.title}
+                    emoji={status.emoji}
+                    color={status.color}
+                    applications={columnApplications}
+                    onCardClick={setSelectedApp}
+                    onAddClick={() => handleAddClick(status.id)}
+                  />
+                )
+              })}
+            </div>
           </div>
         </DragDropContext>
       ) : (
@@ -314,15 +308,15 @@ export default function KanbanBoard() {
           <TableView
             applications={filteredApplications}
             statuses={statuses}
-            onCardClick={handleCardClick}
+            onCardClick={setSelectedApp}
+            onEdit={handleEdit}
             onBulkDelete={handleBulkDelete}
             onBulkStatusUpdate={handleBulkStatusUpdate}
           />
         </div>
       )}
 
-      {/* Yeni Başvuru / Düzenleme Modal */}
-      {isFormOpen && (
+      {isFormOpen ? (
         <ApplicationForm
           editingApplication={editingApp}
           statuses={statuses}
@@ -333,10 +327,9 @@ export default function KanbanBoard() {
           }}
           onSuccess={handleFormSuccess}
         />
-      )}
+      ) : null}
 
-      {/* Detay Modal */}
-      {selectedApp && (
+      {selectedApp ? (
         <ApplicationDetail
           application={selectedApp}
           statuses={statuses}
@@ -344,7 +337,7 @@ export default function KanbanBoard() {
           onEdit={() => handleEdit(selectedApp)}
           onDelete={() => handleDelete(selectedApp.id)}
         />
-      )}
+      ) : null}
     </>
   )
 }

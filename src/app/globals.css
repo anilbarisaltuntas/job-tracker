@@ -1,159 +1,276 @@
 @import "tailwindcss";
 
-/* ==============================
-   TEMA DEĞİŞKENLERİ — YENİ NESİL MODERN SAAS (Linear / Raycast / Supabase)
-   ============================== */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-/* Dark Tema (Derin Gece Antrasiti & Indigo Dokunuşlar) */
 :root,
 [data-theme="dark"] {
-  --bg:              #0B0F17; /* Derin Obsidian / Gece Mavisi */
-  --bg-surface:      #131B2E; /* Kartlar ve Paneller */
-  --bg-surface-hover: #1E293B;
-  --bg-elevated:     #131B2E;
-  --bg-header:       rgba(11, 15, 23, 0.85);
-  --bg-column:       #0D1320;
+  color-scheme: dark;
 
-  --border:          rgba(51, 65, 85, 0.6);
-  --border-hover:    #6366F1;
-  --border-strong:   #475569;
+  --bg: #0d0e10;
+  --bg-sidebar: #101113;
+  --bg-surface: #15171a;
+  --bg-surface-hover: #1b1e22;
+  --bg-elevated: #191b1f;
+  --bg-header: rgba(13, 14, 16, 0.9);
+  --bg-column: #111315;
 
-  --text-primary:    #F8FAFC;
-  --text-secondary:  #94A3B8;
-  --text-tertiary:   #64748B;
-  --text-inverted:   #0B0F17;
+  --nav-bg: #08090b;
+  --nav-border: rgba(255, 255, 255, 0.09);
+  --nav-item: #15171a;
+  --nav-item-hover: #1c1f23;
+  --nav-active: #24272c;
+  --nav-text: #737880;
+  --nav-text-strong: #f4f3ef;
 
-  --input-bg:        #0B0F17;
-  --input-border:    #334155;
-  --input-focus:     #818CF8;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.22);
+  --border-strong: rgba(255, 255, 255, 0.18);
 
-  --badge-bg:        #1E1B4B;
-  --badge-text:      #C7D2FE;
+  --text-primary: #f4f3ef;
+  --text-secondary: #a5a7a9;
+  --text-tertiary: #70747a;
+  --text-inverted: #121315;
 
-  --accent:          #6366F1; /* Indigo 500 */
-  --accent-secondary:#818CF8;
-  --accent-hover:    #4F46E5;
-  --accent-subtle:   rgba(99, 102, 241, 0.15);
+  --signal: #ff6b3d;
+  --signal-contrast: #1b0b06;
+  --brand-solid: #f4f3ef;
+  --brand-on-solid: #111214;
+  --tooltip-bg: #f4f3ef;
+  --tooltip-text: #111214;
 
-  --btn-primary-bg:  #6366F1;
-  --btn-primary-text: #FFFFFF;
+  --accent: #f26035;
+  --accent-strong: #ffad93;
+  --accent-secondary: #ff8059;
+  --accent-hover: #db4d25;
+  --accent-subtle: rgba(242, 96, 53, 0.13);
+  --accent-border: rgba(255, 128, 89, 0.3);
+  --ring: #ff8059;
 
-  --logo-bg:         linear-gradient(135deg, #6366F1, #8B5CF6);
-  --logo-text:       #FFFFFF;
+  --danger: #ff6b7a;
+  --danger-subtle: rgba(255, 75, 95, 0.11);
+  --danger-subtle-strong: rgba(255, 75, 95, 0.18);
 
-  --shadow-soft:     0 4px 20px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -1px rgba(0, 0, 0, 0.3);
-  --shadow-hover:    0 12px 30px -4px rgba(99, 102, 241, 0.25), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  --input-bg: #111315;
+  --input-border: rgba(255, 255, 255, 0.14);
+  --input-focus: #ff8059;
+  --badge-bg: rgba(255, 255, 255, 0.06);
+  --badge-text: #d7d6d2;
 
-  --scrollbar-thumb: #334155;
-  --scrollbar-hover: #475569;
+  --btn-primary-bg: var(--accent);
+  --btn-primary-text: #ffffff;
+  --logo-bg: var(--brand-solid);
+  --logo-text: var(--brand-on-solid);
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-button: 0 5px 16px rgba(242, 96, 53, 0.2);
+  --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.16);
+  --shadow-hover: 0 12px 30px rgba(0, 0, 0, 0.22);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.42);
+
+  --scrollbar-thumb: #30343a;
+  --scrollbar-hover: #474c54;
 }
 
-/* Light Tema (Ferah Kırık Beyaz & Temiz İndigo) */
 [data-theme="light"] {
-  --bg:              #F8FAFC; /* Slate 50 */
-  --bg-surface:      #FFFFFF;
-  --bg-surface-hover: #F1F5F9;
-  --bg-elevated:     #FFFFFF;
-  --bg-header:       rgba(248, 250, 252, 0.85);
-  --bg-column:       #F1F5F9;
+  color-scheme: light;
 
-  --border:          #E2E8F0;
-  --border-hover:    #CBD5E1;
-  --border-strong:   #CBD5E1;
+  --bg: #f3f1ec;
+  --bg-sidebar: #f7f5f0;
+  --bg-surface: #fbfaf7;
+  --bg-surface-hover: #eeece6;
+  --bg-elevated: #fffefa;
+  --bg-header: rgba(243, 241, 236, 0.9);
+  --bg-column: #ebe9e3;
 
-  --text-primary:    #0F172A;
-  --text-secondary:  #475569;
-  --text-tertiary:   #94A3B8;
-  --text-inverted:   #FFFFFF;
+  --nav-bg: #111214;
+  --nav-border: rgba(255, 255, 255, 0.09);
+  --nav-item: #1a1c1f;
+  --nav-item-hover: #24272b;
+  --nav-active: #2c2f34;
+  --nav-text: #858a91;
+  --nav-text-strong: #ffffff;
 
-  --input-bg:        #FFFFFF;
-  --input-border:    #E2E8F0;
-  --input-focus:     #4F46E5;
+  --border: #dcd9d1;
+  --border-hover: #bdb9af;
+  --border-strong: #c7c3ba;
 
-  --badge-bg:        #EEF2FF;
-  --badge-text:      #4338CA;
+  --text-primary: #191a1c;
+  --text-secondary: #595c61;
+  --text-tertiary: #86888c;
+  --text-inverted: #ffffff;
 
-  --accent:          #4F46E5;
-  --accent-secondary:#6366F1;
-  --accent-hover:    #4338CA;
-  --accent-subtle:   rgba(79, 70, 229, 0.08);
+  --signal: #ff6b3d;
+  --signal-contrast: #1b0b06;
+  --brand-solid: #f4f3ef;
+  --brand-on-solid: #111214;
+  --tooltip-bg: #111214;
+  --tooltip-text: #ffffff;
 
-  --btn-primary-bg:  #4F46E5;
-  --btn-primary-text: #FFFFFF;
+  --accent: #e95328;
+  --accent-strong: #c73d17;
+  --accent-secondary: #f26035;
+  --accent-hover: #c9411c;
+  --accent-subtle: rgba(233, 83, 40, 0.09);
+  --accent-border: rgba(233, 83, 40, 0.24);
+  --ring: #e95328;
 
-  --logo-bg:         linear-gradient(135deg, #4F46E5, #7C3AED);
-  --logo-text:       #FFFFFF;
+  --danger: #d92d4c;
+  --danger-subtle: rgba(217, 45, 76, 0.08);
+  --danger-subtle-strong: rgba(217, 45, 76, 0.14);
 
-  --shadow-soft:     0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.03);
-  --shadow-hover:    0 10px 25px -3px rgba(79, 70, 229, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
+  --input-bg: #fffefa;
+  --input-border: #d5d1c8;
+  --input-focus: #e95328;
+  --badge-bg: #ebe8e1;
+  --badge-text: #4d4f53;
 
-  --scrollbar-thumb: #CBD5E1;
-  --scrollbar-hover: #94A3B8;
+  --btn-primary-bg: var(--accent);
+  --btn-primary-text: #ffffff;
+  --logo-bg: var(--brand-solid);
+  --logo-text: var(--brand-on-solid);
+
+  --shadow-xs: 0 1px 2px rgba(25, 26, 28, 0.07);
+  --shadow-button: 0 5px 15px rgba(233, 83, 40, 0.16);
+  --shadow-soft: 0 7px 20px rgba(25, 26, 28, 0.06);
+  --shadow-hover: 0 10px 26px rgba(25, 26, 28, 0.09);
+  --shadow-lg: 0 24px 55px rgba(25, 26, 28, 0.17);
+
+  --scrollbar-thumb: #c5c1b8;
+  --scrollbar-hover: #9b978f;
 }
 
-/* ==============================
-   TAILWIND TEMA ENTEGRASYONU
-   ============================== */
 @theme inline {
   --color-background: var(--bg);
   --color-foreground: var(--text-primary);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
 }
 
-/* ==============================
-   GLOBAL STİLLER
-   ============================== */
+html {
+  min-width: 320px;
+  background: var(--bg);
+  overscroll-behavior-y: none;
+  text-size-adjust: 100%;
+}
+
 body {
-  background-color: var(--bg);
-  color: var(--text-primary);
-  font-family: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), "Geist", ui-sans-serif, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Koyu modda arkada çok tatlı ortam ışığı yansıması */
-[data-theme="dark"] body {
-  background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
-/* Tüm geçişler akıcı ve ipeksi (sürükleme titremesini önlemek için transform hariç) */
-*, *::before, *::after {
-  transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+button,
+[role="button"],
+summary {
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* ==============================
-   MODERN SAAS UTILITIES
-   ============================== */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+summary {
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--accent-subtle);
+  color: var(--text-primary);
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
 .modern-card {
-  background-color: var(--bg-surface);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow-soft);
-  border-radius: 12px;
+  border-radius: var(--radius-xl);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
 }
 
 .modern-card:hover {
-  box-shadow: var(--shadow-hover);
-  border-color: var(--accent-secondary);
-  transform: translateY(-2px);
+  border-color: var(--border-hover);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-soft);
 }
 
-/* Header blur efekti */
 .glass-header {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
 }
 
-/* SCROLLBAR */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
 
-/* INPUT FOCUS */
-input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--accent) !important;
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: var(--scrollbar-thumb);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--input-focus) !important;
   box-shadow: 0 0 0 3px var(--accent-subtle) !important;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root,
+  [data-theme="dark"],
+  [data-theme="light"] {
+    --border: currentColor;
+    --input-border: currentColor;
+  }
 }

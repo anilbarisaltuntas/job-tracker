@@ -1,59 +1,52 @@
 'use client'
 
-/**
- * THEME CONTEXT — Tema Yönetimi
- * 
- * Uygulamanın dark/light temasını yönetir.
- * - localStorage'da kullanıcı tercihini saklar
- * - <html> etiketine data-theme attribute'u ekler
- * - Tüm bileşenlere useTheme() hook'u ile erişim sağlar
- */
-
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useSyncExternalStore } from 'react'
 
 type Theme = 'dark' | 'light'
 
 interface ThemeContextType {
   theme: Theme
+  setTheme: (theme: Theme) => void
   toggleTheme: () => void
 }
 
+const THEME_CHANGE_EVENT = 'basvuru-pusulasi-theme-change'
+
 const ThemeContext = createContext<ThemeContextType>({
   theme: 'dark',
+  setTheme: () => {},
   toggleTheme: () => {},
 })
 
+function getThemeSnapshot(): Theme {
+  return document.documentElement.dataset.theme === 'light' ? 'light' : 'dark'
+}
+
+function getServerThemeSnapshot(): Theme {
+  return 'dark'
+}
+
+function subscribeToTheme(callback: () => void) {
+  window.addEventListener(THEME_CHANGE_EVENT, callback)
+  return () => window.removeEventListener(THEME_CHANGE_EVENT, callback)
+}
+
+function applyTheme(theme: Theme) {
+  document.documentElement.dataset.theme = theme
+  localStorage.setItem('theme', theme)
+  window.dispatchEvent(new Event(THEME_CHANGE_EVENT))
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark')
-  const [mounted, setMounted] = useState(false)
-
-  // İlk yüklemede localStorage'dan tercihi oku
-  useEffect(() => {
-    const saved = localStorage.getItem('theme') as Theme | null
-    if (saved === 'light' || saved === 'dark') {
-      setTheme(saved)
-    }
-    setMounted(true)
-  }, [])
-
-  // Tema değiştiğinde <html> etiketini ve localStorage'ı güncelle
-  useEffect(() => {
-    if (!mounted) return
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('theme', theme)
-  }, [theme, mounted])
-
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'))
-  }
-
-  // Hydration mismatch'i önlemek için mount olana kadar dark tema göster
-  if (!mounted) {
-    return <>{children}</>
-  }
+  const theme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot)
+  const setTheme = useCallback((nextTheme: Theme) => applyTheme(nextTheme), [])
+  const toggleTheme = useCallback(
+    () => applyTheme(theme === 'dark' ? 'light' : 'dark'),
+    [theme]
+  )
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   )

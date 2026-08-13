@@ -1,38 +1,26 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import KanbanBoard from '@/components/board/KanbanBoard'
-import Header from '@/components/layout/Header'
 
 /**
  * BOARD SAYFASI (Modern SaaS)
  */
-export default async function BoardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
+export default function BoardPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--bg)]">
-      <Header />
-      <main className="flex-1 w-full px-6 py-6">
-        <div className="mb-6 animate-stagger w-full flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-              Takip Panosu
-            </h2>
-            <p className="mt-1 text-sm font-medium text-[var(--text-secondary)]">
-              Kariyer serüveninizdeki tüm başvuru süreçlerini tek bir yerden yönetin.
-            </p>
-          </div>
+    <section className="w-full px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mb-6 w-full">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent-strong)]">
+          Çalışma alanı
+        </p>
+        <div>
+          <h1 className="text-2xl font-bold tracking-[-0.03em] text-[var(--text-primary)] sm:text-3xl">
+            Takip Panosu
+          </h1>
+          <p className="mt-1.5 max-w-2xl text-sm text-[var(--text-secondary)]">
+            Başvurularınızı, takip tarihlerinizi ve ilerleme durumlarını tek bir yerden yönetin.
+          </p>
         </div>
-        
-        <div className="w-full">
-          <KanbanBoard />
-        </div>
-      </main>
-    </div>
+      </div>
+
+      <KanbanBoard />
+    </section>
   )
 }

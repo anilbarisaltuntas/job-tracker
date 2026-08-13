@@ -1,68 +1,95 @@
 'use client'
 
-/**
- * APPLICATION CARD — Modern SaaS Design
- */
-
-import { Application } from '@/lib/types'
+import { ArrowUpRight, CalendarDays, UserRound } from 'lucide-react'
+import { Application, MatchLevel } from '@/lib/types'
+import CompanyLogo from '@/components/ui/CompanyLogo'
 
 interface ApplicationCardProps {
   application: Application
+  accentColor?: string
   onClick: () => void
 }
 
-export default function ApplicationCard({ application, onClick }: ApplicationCardProps) {
+const matchLabels: Record<MatchLevel, string> = {
+  high: 'Yüksek uyum',
+  medium: 'Orta uyum',
+  low: 'Düşük uyum',
+}
+
+const matchStyles: Record<MatchLevel, string> = {
+  high: 'border-emerald-500/20 bg-emerald-500/8 text-emerald-500',
+  medium: 'border-amber-500/20 bg-amber-500/8 text-amber-500',
+  low: 'border-rose-500/20 bg-rose-500/8 text-rose-500',
+}
+
+export default function ApplicationCard({ application, accentColor = 'var(--accent)', onClick }: ApplicationCardProps) {
+  const contactCount = application.contacts?.length ?? 0
+
   return (
-    <div
-      onClick={onClick}
-      className="group relative cursor-pointer modern-card p-4 transition-all duration-200"
-    >
-      {/* Şirket Adı & İkon */}
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-[15px] font-bold tracking-tight text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors line-clamp-1">
-          {application.company_name}
-        </h3>
-        
-        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-[var(--badge-bg)] text-[var(--text-tertiary)] opacity-0 transition-opacity duration-200 group-hover:opacity-100 border border-[var(--border)]">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
+    <article className="group/card relative overflow-hidden rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] shadow-[var(--shadow-xs)] transition-[border-color,background-color,box-shadow] duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)] hover:shadow-[var(--shadow-soft)]">
+      <span className="absolute inset-y-0 left-0 w-[3px]" style={{ backgroundColor: accentColor }} aria-hidden="true" />
+
+      <button
+        type="button"
+        onClick={onClick}
+        className="block w-full px-4 pb-3.5 pt-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
+        aria-label={`${application.company_name}, ${application.position} başvurusunu aç`}
+      >
+        <div className="flex items-start gap-3">
+          <CompanyLogo companyName={application.company_name} companyDomain={application.company_domain} />
+
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[14px] font-bold tracking-[-0.02em] text-[var(--text-primary)]">
+              {application.company_name}
+            </span>
+            <span className="mt-0.5 block truncate text-[12px] font-medium text-[var(--text-secondary)]">
+              {application.position}
+            </span>
+          </span>
+
+          <span className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${
+            application.match_level === 'high'
+              ? 'bg-emerald-500'
+              : application.match_level === 'medium'
+                ? 'bg-amber-500'
+                : 'bg-rose-500'
+          }`} aria-hidden="true" />
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          <span className={`inline-flex h-6 items-center rounded-[6px] border px-2 text-[10px] font-semibold ${matchStyles[application.match_level]}`}>
+            {matchLabels[application.match_level]}
+          </span>
+
+        </div>
+      </button>
+
+      <div className="flex min-h-10 items-center gap-3 border-t border-[var(--border)] px-4 py-2 text-[10px] font-medium text-[var(--text-tertiary)]">
+        <span className="inline-flex items-center gap-1.5" title="Başvuru tarihi">
+          <CalendarDays aria-hidden="true" size={12} />
+          {new Date(application.application_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
         </span>
-      </div>
 
-      {/* Pozisyon */}
-      <p className="mt-1 text-[13px] font-medium text-[var(--text-secondary)] line-clamp-1">
-        {application.position}
-      </p>
-
-      {/* Metrik Rozetleri */}
-      <div className="mt-3.5 flex flex-wrap items-center gap-1.5">
-        {application.match_level && (
-          <span className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium tracking-wide border shadow-2xs ${
-            application.match_level === 'high' 
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 
-            application.match_level === 'medium' 
-              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30' : 
-              'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
-          }`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${
-              application.match_level === 'high' ? 'bg-emerald-500 animate-pulse' :
-              application.match_level === 'medium' ? 'bg-amber-500' :
-              'bg-rose-500'
-            }`} />
-            {application.match_level === 'high' ? 'Yüksek Uyum' : application.match_level === 'medium' ? 'Orta Uyum' : 'Düşük Uyum'}
+        {contactCount > 0 && (
+          <span className="inline-flex items-center gap-1.5" title={`${contactCount} iletişim kişisi`}>
+            <UserRound aria-hidden="true" size={12} />
+            {contactCount} kişi
           </span>
         )}
-        
-        {application.application_date && (
-          <span 
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium tracking-wide border border-[var(--border)] bg-[var(--badge-bg)] text-[var(--text-tertiary)]"
+
+        {application.job_url && (
+          <a
+            href={application.job_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto inline-flex items-center gap-1 rounded-[5px] px-1.5 py-1 font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            aria-label={`${application.company_name} ilanını yeni sekmede aç`}
           >
-            <span className="opacity-70">📅</span>
-            {new Date(application.application_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </span>
+            İlan
+            <ArrowUpRight aria-hidden="true" size={12} strokeWidth={2.2} />
+          </a>
         )}
       </div>
-    </div>
+    </article>
   )
 }

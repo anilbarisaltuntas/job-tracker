@@ -16,6 +16,22 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### Company logos
+
+Company logos are served by [Logo.dev](https://www.logo.dev). Add the publishable key from your Logo.dev dashboard to `.env.local`:
+
+```bash
+NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY=pk_your_publishable_key
+```
+
+For more accurate company-name-to-domain matching, you can also add the optional server-only search key:
+
+```bash
+LOGO_DEV_SECRET_KEY=sk_your_secret_key
+```
+
+Restart `npm run dev` after changing environment variables. Keep the secret key server-side and never prefix it with `NEXT_PUBLIC_`.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
