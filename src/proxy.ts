@@ -54,10 +54,10 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Giriş yapmış kullanıcı login/register sayfasına gitmeye çalışırsa → /board'a yönlendir
+  // Giriş yapmış kullanıcı login/register sayfasına gitmeye çalışırsa → /overview'a yönlendir
   if (user && (pathname.startsWith('/login') || pathname.startsWith('/register'))) {
     const url = request.nextUrl.clone()
-    url.pathname = '/board'
+    url.pathname = '/overview'
     return NextResponse.redirect(url)
   }
 

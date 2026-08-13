@@ -7,6 +7,7 @@ import {
   Bookmark,
   CheckSquare2,
   Compass,
+  House,
   KanbanSquare,
   LogOut,
   Moon,
@@ -24,23 +25,17 @@ interface AppShellProps {
 type Theme = 'dark' | 'light'
 
 const navigation = [
+  { href: '/overview', label: 'Özet', icon: House },
   { href: '/board', label: 'Pano', icon: KanbanSquare },
   { href: '/todos', label: 'Görevler', icon: CheckSquare2 },
   { href: '/saved', label: 'Kaydedilenler', icon: Bookmark },
   { href: '/settings', label: 'Ayarlar', icon: Settings2 },
 ]
 
-const pageInfo: Record<string, { title: string; eyebrow: string }> = {
-  '/board': { title: 'Takip Panosu', eyebrow: 'Başvurular' },
-  '/todos': { title: 'Görevler', eyebrow: 'Ajanda' },
-  '/saved': { title: 'Kaydedilenler', eyebrow: 'İlan Havuzu' },
-  '/settings': { title: 'Ayarlar', eyebrow: 'Çalışma Alanı' },
-}
-
 function Brand({ showName = false }: { showName?: boolean }) {
   return (
     <Link
-      href="/board"
+      href="/overview"
       className="group flex items-center gap-2.5 focus-visible:outline-none"
       aria-label="Başvuru Pusulası ana sayfa"
     >
@@ -145,7 +140,6 @@ export default function AppShell({ children, userEmail }: AppShellProps) {
   const router = useRouter()
   const supabase = useMemo(() => createClient(), [])
   const { theme, setTheme, toggleTheme } = useTheme()
-  const currentPage = pageInfo[pathname] ?? { title: 'Başvuru Pusulası', eyebrow: 'Çalışma Alanı' }
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -212,37 +206,29 @@ export default function AppShell({ children, userEmail }: AppShellProps) {
       </aside>
 
       <div className="lg:pl-[92px]">
-        <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-[var(--border)] bg-[var(--bg-header)] px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+        <header className="sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-[var(--border)] bg-[var(--bg-header)] px-4 backdrop-blur-xl sm:px-6 lg:hidden">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="lg:hidden">
-              <Brand />
-            </div>
-            <div className="min-w-0 border-l border-[var(--border)] pl-3 lg:border-l-0 lg:pl-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--text-tertiary)]">{currentPage.eyebrow}</p>
-              <p className="truncate text-sm font-semibold tracking-[-0.01em] text-[var(--text-primary)]">{currentPage.title}</p>
-            </div>
+            <Brand showName />
           </div>
 
           <div className="flex items-center">
-            <div className="lg:hidden">
-              <AccountMenu
-                theme={theme}
-                setTheme={setTheme}
-                userEmail={userEmail}
-                userInitial={userInitial}
-                onLogout={handleLogout}
-              />
-            </div>
+            <AccountMenu
+              theme={theme}
+              setTheme={setTheme}
+              userEmail={userEmail}
+              userInitial={userInitial}
+              onLogout={handleLogout}
+            />
           </div>
         </header>
 
-        <main id="ana-icerik" className="min-h-[calc(100dvh-68px)] pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0">
+        <main id="ana-icerik" className="min-h-[calc(100dvh-68px)] pb-[calc(6rem+env(safe-area-inset-bottom))] lg:min-h-dvh lg:pb-0">
           {children}
         </main>
       </div>
 
       <nav
-        className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-1/2 z-40 grid w-[calc(100%-24px)] max-w-md -translate-x-1/2 grid-cols-4 rounded-[14px] border border-[var(--nav-border)] bg-[var(--nav-bg)] p-1.5 shadow-[var(--shadow-lg)] lg:hidden"
+        className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-1/2 z-40 grid w-[calc(100%-24px)] max-w-lg -translate-x-1/2 grid-cols-5 rounded-[14px] border border-[var(--nav-border)] bg-[var(--nav-bg)] p-1.5 shadow-[var(--shadow-lg)] lg:hidden"
         aria-label="Mobil navigasyon"
       >
         {navigation.map(({ href, label, icon: Icon }) => {

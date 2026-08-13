@@ -44,7 +44,7 @@ export default function RegisterPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/board')
+      router.push('/overview')
       router.refresh()
     }
   }
