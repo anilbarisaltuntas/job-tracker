@@ -40,7 +40,17 @@ const STATUS_COLORS = [
   { color: '#EF4444', background: '#FEF2F2', label: 'Kırmızı' },
 ]
 
-const STATUS_ICONS = ['📌', '📤', '💬', '📧', '⏳', '✉️', '💼', '✅', '🎯', '⭐', '🚀', '❌']
+const STATUS_ICONS = [
+  '📌', '📝', '📋', '🗂️', '🔖',
+  '📤', '📨', '📬', '📧', '✉️',
+  '💬', '🗨️', '📞', '🔔', '👀',
+  '🔍', '🕒', '⏳', '⏸️', '🔄',
+  '⚡', '🧭', '🤝', '👋', '🧑‍💻',
+  '💼', '🗓️', '🎤', '🎯', '🧪',
+  '✅', '☑️', '⭐', '🚀', '🎉',
+  '🏆', '💡', '🔥', '⭕', '⚠️',
+  '🚫', '❌',
+]
 
 function cloneStatuses(statuses: UserStatus[]) {
   return statuses.map(status => ({ ...status }))
@@ -175,9 +185,12 @@ export default function SettingsPage() {
     }
 
     const statusesToSave: UserStatus[] = statuses.map((status, index) => ({
-      ...status,
+      id: status.id,
       user_id: userId,
       title: status.title.trim(),
+      emoji: status.emoji,
+      color: status.color,
+      bg_color: status.bg_color,
       order_index: index,
     }))
 
@@ -196,8 +209,12 @@ export default function SettingsPage() {
     const removedIds = (remoteStatuses || []).map(status => status.id).filter(id => !nextIds.has(id))
 
     if (statusesToSave.length > 0) {
-      const { error: upsertError } = await supabase.from('user_statuses').upsert(statusesToSave)
+      const { error: upsertError } = await supabase
+        .from('user_statuses')
+        .upsert(statusesToSave, { onConflict: 'id,user_id' })
+
       if (upsertError) {
+        console.error('Pano durumları kaydedilemedi:', upsertError)
         setFeedback({ type: 'error', text: 'Değişiklikler kaydedilemedi. Lütfen tekrar dene.' })
         setIsSaving(false)
         return
@@ -353,7 +370,7 @@ export default function SettingsPage() {
                                 {openPicker?.id === status.id ? (
                                   <div className="border-t border-[var(--border)] px-3 py-3 sm:pl-[90px]">
                                     {openPicker.type === 'icon' ? (
-                                      <div className="flex flex-wrap gap-2" aria-label="Simge seçenekleri">
+                                      <div className="grid max-h-56 grid-cols-6 gap-2 overflow-y-auto pr-1 sm:grid-cols-10" aria-label="Simge seçenekleri">
                                         {STATUS_ICONS.map(icon => (
                                           <button key={icon} type="button" onClick={() => { updateStatus(status.id, { emoji: icon }); setOpenPicker(null) }} className={`flex h-9 w-9 items-center justify-center rounded-[8px] border text-base transition-colors ${status.emoji === icon ? 'border-[var(--accent)] bg-[var(--accent-subtle)]' : 'border-[var(--border)] hover:bg-[var(--bg-surface-hover)]'}`} aria-label={`${icon} simgesini seç`}>{icon}</button>
                                         ))}
