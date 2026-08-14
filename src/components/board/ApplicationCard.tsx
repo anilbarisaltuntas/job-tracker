@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRight, CalendarDays, UserRound } from 'lucide-react'
+import { ArrowUpRight, CalendarDays, GripVertical, UserRound } from 'lucide-react'
 import { Application, MatchLevel } from '@/lib/types'
 import CompanyLogo from '@/components/ui/CompanyLogo'
 
@@ -32,39 +32,34 @@ export default function ApplicationCard({ application, accentColor = 'var(--acce
       <button
         type="button"
         onClick={onClick}
-        className="block w-full px-4 pb-3.5 pt-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
+        className="block w-full px-3.5 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
         aria-label={`${application.company_name}, ${application.position} başvurusunu aç`}
       >
-        <div className="flex items-start gap-3">
-          <CompanyLogo companyName={application.company_name} companyDomain={application.company_domain} />
+        <div className="flex items-center gap-2.5">
+          <CompanyLogo companyName={application.company_name} companyDomain={application.company_domain} size="sm" />
 
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[14px] font-bold tracking-[-0.02em] text-[var(--text-primary)]">
               {application.company_name}
             </span>
-            <span className="mt-0.5 block truncate text-[12px] font-medium text-[var(--text-secondary)]">
+            <span className="mt-px block truncate text-[12px] font-medium text-[var(--text-secondary)]">
               {application.position}
             </span>
           </span>
 
-          <span className={`mt-0.5 h-2 w-2 shrink-0 rounded-full ${
-            application.match_level === 'high'
-              ? 'bg-emerald-500'
-              : application.match_level === 'medium'
-                ? 'bg-amber-500'
-                : 'bg-rose-500'
-          }`} aria-hidden="true" />
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          <span className={`inline-flex h-6 items-center rounded-[6px] border px-2 text-[10px] font-semibold ${matchStyles[application.match_level]}`}>
-            {matchLabels[application.match_level]}
-          </span>
-
+          <GripVertical
+            aria-hidden="true"
+            size={16}
+            className="shrink-0 text-[var(--text-tertiary)] transition-colors group-hover/card:text-[var(--text-secondary)]"
+          />
         </div>
       </button>
 
-      <div className="flex min-h-10 items-center gap-3 border-t border-[var(--border)] px-4 py-2 text-[10px] font-medium text-[var(--text-tertiary)]">
+      <div className="flex min-h-8 items-center gap-2 border-t border-[var(--border)] px-3.5 py-1.5 text-[10px] font-medium text-[var(--text-tertiary)]">
+        <span className={`inline-flex h-5 shrink-0 items-center rounded-[5px] border px-1.5 text-[9px] font-semibold ${matchStyles[application.match_level]}`}>
+          {matchLabels[application.match_level]}
+        </span>
+
         <span className="inline-flex items-center gap-1.5" title="Başvuru tarihi">
           <CalendarDays aria-hidden="true" size={12} />
           {new Date(application.application_date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
@@ -82,7 +77,7 @@ export default function ApplicationCard({ application, accentColor = 'var(--acce
             href={application.job_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="ml-auto inline-flex items-center gap-1 rounded-[5px] px-1.5 py-1 font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            className="ml-auto inline-flex items-center gap-1 rounded-[5px] px-1 py-0.5 font-semibold text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
             aria-label={`${application.company_name} ilanını yeni sekmede aç`}
           >
             İlan

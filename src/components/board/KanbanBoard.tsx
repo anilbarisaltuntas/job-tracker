@@ -33,7 +33,7 @@ function BoardSkeleton() {
             <Skeleton className="h-11" />
             <div className="mt-3 space-y-2.5">
               {Array.from({ length: 3 }, (_, cardIndex) => (
-                <Skeleton key={cardIndex} className="h-36 rounded-[12px]" />
+                <Skeleton key={cardIndex} className="h-24 rounded-[12px]" />
               ))}
             </div>
           </div>
@@ -275,7 +275,11 @@ export default function KanbanBoard() {
           <Button variant="ghost" size="sm" onClick={() => { setSearchQuery(''); setMatchFilter('all') }}>Filtreleri temizle</Button>
         </div>
       ) : viewMode === 'kanban' ? (
-        <DragDropContext onDragStart={() => setIsDragging(true)} onDragEnd={handleDragEnd}>
+        <DragDropContext
+          dragHandleUsageInstructions="Kartı taşımak için boşluk tuşuna basın. Ok tuşlarıyla hedef statüyü seçip yeniden boşluk tuşuna basın."
+          onDragStart={() => setIsDragging(true)}
+          onDragEnd={handleDragEnd}
+        >
           <div className={`-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 ${isDragging ? 'cursor-grabbing' : ''}`}>
             <div className="flex w-max items-start gap-4">
               {statuses.map(status => {

@@ -64,17 +64,23 @@ export default function KanbanColumn({
             ) : null}
 
             {applications.map((application, index) => (
-              <Draggable key={application.id} draggableId={application.id} index={index}>
+              <Draggable
+                key={application.id}
+                draggableId={application.id}
+                index={index}
+                disableInteractiveElementBlocking
+              >
                 {(dragProvided, dragSnapshot) => (
                   <div
                     ref={dragProvided.innerRef}
                     {...dragProvided.draggableProps}
                     {...dragProvided.dragHandleProps}
-                    className={`mb-2.5 rounded-[12px] transition-[transform,box-shadow,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${
+                    className={`mb-2 cursor-grab rounded-[12px] transition-[transform,box-shadow,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] active:cursor-grabbing ${
                       dragSnapshot.isDragging
                         ? 'z-50 scale-[1.025] opacity-95 shadow-[var(--shadow-lg)] ring-2 ring-[var(--accent-border)]'
                         : ''
                     }`}
+                    title="Başka bir statüye taşımak için sürükle"
                   >
                     <ApplicationCard
                       application={application}

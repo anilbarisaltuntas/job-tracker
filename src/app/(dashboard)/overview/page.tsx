@@ -70,6 +70,7 @@ export default async function OverviewPage() {
       .select('id, title, due_date, priority, application_id, application:applications(company_name, position)')
       .neq('status', 'completed')
       .order('due_date', { ascending: true, nullsFirst: false })
+      .order('created_at', { ascending: false })
       .limit(6),
   ])
 
