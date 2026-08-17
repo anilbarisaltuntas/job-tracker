@@ -12,6 +12,7 @@ import {
   LogOut,
   Moon,
   Settings2,
+  Sparkles,
   Sun,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
@@ -29,6 +30,7 @@ const navigation = [
   { href: '/board', label: 'Pano', icon: KanbanSquare },
   { href: '/todos', label: 'Görevler', icon: CheckSquare2 },
   { href: '/saved', label: 'Kaydedilenler', icon: Bookmark },
+  { href: '/opportunities', label: 'Programlar', icon: Sparkles },
   { href: '/settings', label: 'Ayarlar', icon: Settings2 },
 ]
 
@@ -228,7 +230,7 @@ export default function AppShell({ children, userEmail }: AppShellProps) {
       </div>
 
       <nav
-        className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-1/2 z-40 grid w-[calc(100%-24px)] max-w-lg -translate-x-1/2 grid-cols-5 rounded-[14px] border border-[var(--nav-border)] bg-[var(--nav-bg)] p-1.5 shadow-[var(--shadow-lg)] lg:hidden"
+        className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-1/2 z-40 grid w-[calc(100%-24px)] max-w-xl -translate-x-1/2 grid-cols-6 rounded-[14px] border border-[var(--nav-border)] bg-[var(--nav-bg)] p-1.5 shadow-[var(--shadow-lg)] lg:hidden"
         aria-label="Mobil navigasyon"
       >
         {navigation.map(({ href, label, icon: Icon }) => {

@@ -86,10 +86,12 @@ export default async function OverviewPage() {
     status.id,
     applications.filter(application => application.status === status.id).length,
   ]))
-  const interviewStatus = statuses.find(status =>
-    status.title.trim().toLocaleLowerCase('tr-TR') === 'mülakat yapıldı'
-  ) ?? statuses.find(status => status.id === 'interview_done_waiting')
-  const interviewCount = interviewStatus ? statusCounts.get(interviewStatus.id) || 0 : 0
+  const interviewStatuses = statuses.filter(status =>
+    status.title.trim().toLocaleLowerCase('tr-TR').startsWith('mülakat yapıldı')
+  )
+  const interviewCount = interviewStatuses.length > 0
+    ? interviewStatuses.reduce((total, status) => total + (statusCounts.get(status.id) || 0), 0)
+    : applications.filter(application => application.status === 'interview_done_waiting').length
   const interviewRate = percentage(interviewCount, applications.length)
 
   const metrics = [

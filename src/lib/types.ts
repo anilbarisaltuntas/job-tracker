@@ -161,3 +161,39 @@ export interface TodoTask {
 }
 
 export type TodoTaskFormData = Omit<TodoTask, 'id' | 'user_id' | 'created_at' | 'updated_at' | 'application'>
+
+/** Bootcamp, gönüllü proje ve etkinlik fırsatları */
+export type OpportunityStatus = 'to_apply' | 'applied' | 'accepted' | 'rejected'
+export type OpportunityType =
+  | 'bootcamp'
+  | 'volunteer_project'
+  | 'networking_event'
+  | 'workshop_seminar'
+  | 'hackathon'
+  | 'mentorship_fellowship'
+  | 'education_program'
+  | 'other'
+export type OpportunityFormat = 'online' | 'in_person' | 'hybrid'
+
+export interface Opportunity {
+  id: string
+  user_id: string
+  title: string
+  organizer: string
+  opportunity_type: OpportunityType
+  event_format: OpportunityFormat
+  status: OpportunityStatus
+  event_date: string | null
+  application_date: string | null
+  location: string | null
+  opportunity_url: string | null
+  notes: string | null
+  kanban_order: number
+  created_at: string
+  updated_at: string
+}
+
+export type OpportunityFormData = Omit<
+  Opportunity,
+  'id' | 'user_id' | 'kanban_order' | 'created_at' | 'updated_at'
+>
