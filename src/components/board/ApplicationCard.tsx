@@ -6,43 +6,40 @@ import CompanyLogo from '@/components/ui/CompanyLogo'
 
 interface ApplicationCardProps {
   application: Application
-  accentColor?: string
   onClick: () => void
 }
 
 const matchLabels: Record<MatchLevel, string> = {
-  high: 'Yüksek uyum',
-  medium: 'Orta uyum',
-  low: 'Düşük uyum',
+  high: 'Yüksek',
+  medium: 'Orta',
+  low: 'Düşük',
 }
 
-const matchStyles: Record<MatchLevel, string> = {
-  high: 'border-emerald-500/20 bg-emerald-500/8 text-emerald-500',
-  medium: 'border-amber-500/20 bg-amber-500/8 text-amber-500',
-  low: 'border-rose-500/20 bg-rose-500/8 text-rose-500',
+const matchStyles: Record<MatchLevel, { dot: string; text: string }> = {
+  high: { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+  medium: { dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
+  low: { dot: 'bg-rose-500', text: 'text-rose-600 dark:text-rose-400' },
 }
 
-export default function ApplicationCard({ application, accentColor = 'var(--accent)', onClick }: ApplicationCardProps) {
+export default function ApplicationCard({ application, onClick }: ApplicationCardProps) {
   const contactCount = application.contacts?.length ?? 0
 
   return (
-    <article className="group/card relative overflow-hidden rounded-[12px] border border-[var(--border)] bg-[var(--bg-surface)] shadow-[var(--shadow-xs)] transition-[border-color,background-color,box-shadow] duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)] hover:shadow-[var(--shadow-soft)]">
-      <span className="absolute inset-y-0 left-0 w-[3px]" style={{ backgroundColor: accentColor }} aria-hidden="true" />
-
+    <article className="group/card relative overflow-hidden rounded-[8px] border border-[var(--border)] bg-[var(--bg-surface)] transition-[border-color,background-color,box-shadow] duration-150 hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)] hover:shadow-[var(--shadow-xs)]">
       <button
         type="button"
         onClick={onClick}
-        className="block w-full px-3.5 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
+        className="block w-full px-3 py-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
         aria-label={`${application.company_name}, ${application.position} başvurusunu aç`}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-start gap-2.5">
           <CompanyLogo companyName={application.company_name} companyDomain={application.company_domain} size="sm" />
 
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[14px] font-bold tracking-[-0.02em] text-[var(--text-primary)]">
+            <span className="block truncate text-[12px] font-semibold text-[var(--text-secondary)]">
               {application.company_name}
             </span>
-            <span className="mt-px block truncate text-[12px] font-medium text-[var(--text-secondary)]">
+            <span className="mt-0.5 block truncate text-[13px] font-semibold tracking-[-0.015em] text-[var(--text-primary)]">
               {application.position}
             </span>
           </span>
@@ -50,14 +47,15 @@ export default function ApplicationCard({ application, accentColor = 'var(--acce
           <GripVertical
             aria-hidden="true"
             size={16}
-            className="shrink-0 text-[var(--text-tertiary)] transition-colors group-hover/card:text-[var(--text-secondary)]"
+            className="mt-0.5 shrink-0 text-[var(--text-tertiary)] opacity-55 transition-[color,opacity] group-hover/card:text-[var(--text-secondary)] group-hover/card:opacity-100"
           />
         </div>
       </button>
 
-      <div className="flex min-h-8 items-center gap-2 border-t border-[var(--border)] px-3.5 py-1.5 text-[10px] font-medium text-[var(--text-tertiary)]">
-        <span className={`inline-flex h-5 shrink-0 items-center rounded-[5px] border px-1.5 text-[9px] font-semibold ${matchStyles[application.match_level]}`}>
-          {matchLabels[application.match_level]}
+      <div className="mx-3 flex min-h-8 items-center gap-2 border-t border-[var(--border)] text-[10px] font-medium text-[var(--text-tertiary)]">
+        <span className={`inline-flex items-center gap-1.5 font-semibold ${matchStyles[application.match_level].text}`}>
+          <span className={`h-1.5 w-1.5 rounded-[2px] ${matchStyles[application.match_level].dot}`} aria-hidden="true" />
+          {matchLabels[application.match_level]} uyum
         </span>
 
         <span className="inline-flex items-center gap-1.5" title="Başvuru tarihi">

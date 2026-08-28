@@ -8,7 +8,6 @@ import ApplicationCard from './ApplicationCard'
 interface KanbanColumnProps {
   columnId: string
   title: string
-  emoji: string
   applications: Application[]
   color?: string
   onCardClick: (application: Application) => void
@@ -18,27 +17,26 @@ interface KanbanColumnProps {
 export default function KanbanColumn({
   columnId,
   title,
-  emoji,
   applications,
   color = '#6366F1',
   onCardClick,
   onAddClick,
 }: KanbanColumnProps) {
   return (
-    <section className="flex h-[calc(100dvh-190px)] min-h-[420px] max-h-[760px] w-[300px] min-w-[300px] shrink-0 flex-col overflow-hidden rounded-[12px] border border-[var(--border)] bg-[var(--bg-column)] shadow-[var(--shadow-xs)] sm:w-[320px] sm:min-w-[320px] lg:w-[calc(25vw-51px)] lg:min-w-[300px]">
-      <header className="relative m-2 mb-1 flex shrink-0 items-center justify-between overflow-hidden rounded-[9px] border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2.5 shadow-[var(--shadow-xs)]">
-        <span className="absolute inset-y-0 left-0 w-[3px]" style={{ backgroundColor: color }} aria-hidden="true" />
-        <div className="flex min-w-0 items-center gap-2 pl-1">
-          <span className="text-[15px]" aria-hidden="true">{emoji}</span>
-          <h2 className="truncate text-[13px] font-bold tracking-[-0.01em] text-[var(--text-primary)]">{title}</h2>
-          <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-[5px] border border-[var(--border)] bg-[var(--badge-bg)] px-1.5 text-[10px] font-bold text-[var(--text-secondary)]">
+    <section className="relative flex h-[calc(100dvh-190px)] min-h-[440px] max-h-[780px] w-[300px] min-w-[300px] shrink-0 flex-col after:absolute after:-right-2 after:inset-y-0 after:w-px after:bg-[var(--border)] last:after:hidden sm:w-[320px] sm:min-w-[320px] lg:w-[max(280px,calc((100vw-204px)/4))]">
+      <header className="relative flex h-12 shrink-0 items-center justify-between border-b border-[var(--border)] px-1">
+        <span className="absolute -bottom-px left-1 h-[2px] w-9" style={{ backgroundColor: color }} aria-hidden="true" />
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="h-2 w-2 shrink-0 rounded-[2px]" style={{ backgroundColor: color }} aria-hidden="true" />
+          <h2 className="truncate text-[13px] font-semibold tracking-[-0.01em] text-[var(--text-primary)]">{title}</h2>
+          <span className="text-[11px] font-semibold tabular-nums text-[var(--text-tertiary)]">
             {applications.length}
           </span>
         </div>
         <button
           type="button"
           onClick={onAddClick}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[6px] text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[6px] text-[var(--text-tertiary)] transition-colors hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
           aria-label={`${title} sütununa başvuru ekle`}
           title="Başvuru ekle"
         >
@@ -51,18 +49,12 @@ export default function KanbanColumn({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`mx-1.5 mb-1.5 flex min-h-0 flex-1 flex-col overflow-y-auto rounded-[9px] border px-1.5 py-2 transition-[background-color,border-color,box-shadow] duration-150 ${
+            className={`mt-1 flex min-h-0 flex-1 flex-col overflow-y-auto rounded-[8px] px-0.5 py-2 transition-[background-color,box-shadow] duration-150 ${
               snapshot.isDraggingOver
-                ? 'border-[var(--accent-border)] bg-[var(--accent-subtle)] shadow-[inset_0_0_0_1px_var(--accent-border)]'
-                : 'border-transparent'
+                ? 'bg-[var(--accent-subtle)] shadow-[inset_0_0_0_2px_var(--accent-border)]'
+                : ''
             }`}
           >
-            {snapshot.isDraggingOver ? (
-              <div className="mb-2 flex h-9 shrink-0 items-center justify-center rounded-[7px] border border-dashed border-[var(--accent-border)] bg-[var(--bg-elevated)] text-xs font-bold text-[var(--accent-strong)]">
-                Buraya bırak
-              </div>
-            ) : null}
-
             {applications.map((application, index) => (
               <Draggable
                 key={application.id}
@@ -75,16 +67,15 @@ export default function KanbanColumn({
                     ref={dragProvided.innerRef}
                     {...dragProvided.draggableProps}
                     {...dragProvided.dragHandleProps}
-                    className={`mb-2 cursor-grab rounded-[12px] transition-[transform,box-shadow,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] active:cursor-grabbing ${
+                    className={`mb-2 cursor-grab rounded-[8px] transition-[box-shadow,opacity] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] active:cursor-grabbing ${
                       dragSnapshot.isDragging
-                        ? 'z-50 scale-[1.025] opacity-95 shadow-[var(--shadow-lg)] ring-2 ring-[var(--accent-border)]'
+                        ? 'z-50 opacity-95 shadow-[var(--shadow-lg)] ring-2 ring-[var(--accent-border)]'
                         : ''
                     }`}
                     title="Başka bir statüye taşımak için sürükle"
                   >
                     <ApplicationCard
                       application={application}
-                      accentColor={color}
                       onClick={() => onCardClick(application)}
                     />
                   </div>
@@ -94,21 +85,12 @@ export default function KanbanColumn({
             {provided.placeholder}
 
             {applications.length === 0 && !snapshot.isDraggingOver ? (
-              <div className="flex min-h-28 flex-1 flex-col items-center justify-center rounded-[9px] border border-dashed border-[var(--border)] bg-[var(--bg-surface)]/40 px-4 text-center">
-                <p className="text-xs font-semibold text-[var(--text-secondary)]">Bu sütun boş</p>
-                <p className="mt-1 text-[11px] leading-4 text-[var(--text-tertiary)]">Bir kartı buraya sürükle veya yeni başvuru ekle.</p>
+              <div className="flex min-h-36 flex-1 flex-col items-center justify-center rounded-[8px] border border-dashed border-[var(--border)] px-6 text-center">
+                <p className="text-xs font-medium text-[var(--text-secondary)]">Henüz başvuru yok</p>
+                <button type="button" onClick={onAddClick} className="mt-1.5 text-[11px] font-semibold text-[var(--text-tertiary)] underline decoration-[var(--border-strong)] underline-offset-4 hover:text-[var(--text-primary)]">
+                  İlk başvuruyu ekle
+                </button>
               </div>
-            ) : null}
-
-            {!snapshot.isDraggingOver ? (
-              <button
-                type="button"
-                onClick={onAddClick}
-                className="mt-auto flex min-h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-[8px] border border-dashed border-[var(--border)] text-xs font-semibold text-[var(--text-tertiary)] transition-colors hover:border-[var(--border-strong)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
-              >
-                <Plus aria-hidden="true" size={14} />
-                Başvuru ekle
-              </button>
             ) : null}
           </div>
         )}

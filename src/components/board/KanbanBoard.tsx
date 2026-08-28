@@ -29,11 +29,11 @@ function BoardSkeleton() {
     <div className="-mx-4 overflow-hidden px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8" aria-label="Başvurular yükleniyor" role="status">
       <div className="flex gap-4 pb-8">
         {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="h-[560px] w-[300px] min-w-[300px] shrink-0 rounded-[12px] border border-[var(--border)] bg-[var(--bg-column)] p-2 sm:w-[320px] sm:min-w-[320px] lg:w-[calc(25vw-51px)] lg:min-w-[300px]">
-            <Skeleton className="h-11" />
-            <div className="mt-3 space-y-2.5">
+          <div key={index} className="relative h-[560px] w-[300px] min-w-[300px] shrink-0 after:absolute after:-right-2 after:inset-y-0 after:w-px after:bg-[var(--border)] last:after:hidden sm:w-[320px] sm:min-w-[320px] lg:w-[max(280px,calc((100vw-204px)/4))]">
+            <Skeleton className="h-9" />
+            <div className="mt-4 space-y-2.5">
               {Array.from({ length: 3 }, (_, cardIndex) => (
-                <Skeleton key={cardIndex} className="h-24 rounded-[12px]" />
+                <Skeleton key={cardIndex} className="h-[88px] rounded-[10px]" />
               ))}
             </div>
           </div>
@@ -202,7 +202,7 @@ export default function KanbanBoard() {
 
   return (
     <>
-      <div className="sticky top-[68px] z-20 -mx-4 mb-5 border-y border-[var(--border)] bg-[var(--bg-header)] px-4 py-3 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="sticky top-[68px] z-20 -mx-4 mb-4 border-y border-[var(--border)] bg-[var(--bg-header)] px-4 py-2.5 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:top-0 lg:-mx-8 lg:px-8">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row">
             <div className="relative w-full sm:max-w-sm">
@@ -281,7 +281,7 @@ export default function KanbanBoard() {
           onDragEnd={handleDragEnd}
         >
           <div className={`-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 ${isDragging ? 'cursor-grabbing' : ''}`}>
-            <div className="flex w-max items-start gap-4">
+            <div className="flex w-max items-stretch gap-4">
               {statuses.map(status => {
                 const columnApplications = filteredApplications
                   .filter(application => application.status === status.id)
@@ -296,7 +296,6 @@ export default function KanbanBoard() {
                     key={status.id}
                     columnId={status.id}
                     title={status.title}
-                    emoji={status.emoji}
                     color={status.color}
                     applications={columnApplications}
                     onCardClick={setSelectedApp}
