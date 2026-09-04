@@ -56,7 +56,7 @@ export default async function OverviewPage() {
   const supabase = await createClient()
   const weekStart = startOfCurrentWeek().toISOString()
 
-  const [applicationsResult, statusesResult, tasksResult] = await Promise.all([
+  const loadOverviewData = () => Promise.all([
     supabase
       .from('applications')
       .select('id, company_name, company_domain, position, status, created_at, updated_at')
@@ -74,10 +74,30 @@ export default async function OverviewPage() {
       .limit(6),
   ])
 
+  let [applicationsResult, statusesResult, tasksResult] = await loadOverviewData()
+
+  // Vercel'deki ilk istekte token yenilemesiyle aynı ana denk gelen eski-token
+  // 401'ini kullanıcıya hata olarak göstermeden önce oturumu doğrulayıp bir kez dene.
+  if ([applicationsResult, statusesResult, tasksResult].some(result => result.status === 401)) {
+    const { error: claimsError } = await supabase.auth.getClaims()
+
+    if (!claimsError) {
+      ([applicationsResult, statusesResult, tasksResult] = await loadOverviewData())
+    }
+  }
+
   const applications = (applicationsResult.data || []) as OverviewApplication[]
   const statuses = (statusesResult.data || []) as UserStatus[]
   const tasks = (tasksResult.data || []) as unknown as OverviewTask[]
   const hasError = Boolean(applicationsResult.error || statusesResult.error || tasksResult.error)
+
+  if (hasError) {
+    console.error('[overview] Veri sorgusu başarısız', {
+      applications: { status: applicationsResult.status, code: applicationsResult.error?.code },
+      statuses: { status: statusesResult.status, code: statusesResult.error?.code },
+      tasks: { status: tasksResult.status, code: tasksResult.error?.code },
+    })
+  }
 
   const thisWeekCount = applications.filter(application => application.created_at >= weekStart).length
   const updatedThisWeekCount = applications.filter(application => application.updated_at >= weekStart).length

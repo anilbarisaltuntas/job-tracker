@@ -25,7 +25,7 @@ export default async function proxy(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, headers) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           )
@@ -35,30 +35,47 @@ export default async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
+          Object.entries(headers).forEach(([key, value]) =>
+            supabaseResponse.headers.set(key, value)
+          )
         },
       },
     }
   )
 
-  // Oturumu kontrol et (ve gerekirse yenile)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // Token'ı doğrula ve gerekiyorsa yenile. Bu çağrı veri sorgularından önce
+  // yapılmalı ki yenilenen çerez aynı istekteki Server Component'lere ulaşsın.
+  const { data, error } = await supabase.auth.getClaims()
+  const isAuthenticated = !error && Boolean(data?.claims?.sub)
 
   const { pathname } = request.nextUrl
 
-  // Giriş yapmamış kullanıcı korumalı sayfaya gitmeye çalışırsa → /login'e yönlendir
-  if (!user && !pathname.startsWith('/login') && !pathname.startsWith('/register')) {
+  function redirectWithSession(pathname: string) {
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    url.pathname = pathname
+
+    const response = NextResponse.redirect(url)
+
+    // Token bu istek sırasında yenilendiyse yönlendirme cevabı da yeni oturum
+    // çerezlerini ve cache güvenlik başlıklarını taşımalı.
+    supabaseResponse.cookies.getAll().forEach(cookie => response.cookies.set(cookie))
+    supabaseResponse.headers.forEach((value, key) => {
+      if (!['content-length', 'content-type', 'location', 'set-cookie'].includes(key.toLowerCase())) {
+        response.headers.set(key, value)
+      }
+    })
+
+    return response
+  }
+
+  // Giriş yapmamış kullanıcı korumalı sayfaya gitmeye çalışırsa → /login'e yönlendir
+  if (!isAuthenticated && !pathname.startsWith('/login') && !pathname.startsWith('/register')) {
+    return redirectWithSession('/login')
   }
 
   // Giriş yapmış kullanıcı login/register sayfasına gitmeye çalışırsa → /overview'a yönlendir
-  if (user && (pathname.startsWith('/login') || pathname.startsWith('/register'))) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/overview'
-    return NextResponse.redirect(url)
+  if (isAuthenticated && (pathname.startsWith('/login') || pathname.startsWith('/register'))) {
+    return redirectWithSession('/overview')
   }
 
   return supabaseResponse
